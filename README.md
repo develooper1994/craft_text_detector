@@ -1,6 +1,8 @@
 https://pypi.org/project/craft-text-detector/
 # CRAFT: Character-Region Awareness For Text detection
 
+[![CI](https://github.com/fcakyon/craft-text-detector/workflows/CI/badge.svg)](https://github.com/fcakyon/craft-text-detector/actions?query=event%3Apush+branch%3Amaster+is%3Acompleted+workflow%3ACI)
+
 Packaged, Pytorch-based, easy to use, cross-platform version of the CRAFT text detector | [Paper](https://arxiv.org/abs/1904.01941) |
 
 ## Overview
