@@ -70,17 +70,9 @@ def detect_text(
         craft_net = load_craftnet_model(True)
 
     # perform prediction
-    prediction_result = get_prediction(
-        image=image,
-        craft_net=craft_net,
-        refine_net=refine_net,
-        text_threshold=text_threshold,
-        link_threshold=link_threshold,
-        low_text=low_text,
-        cuda=cuda,
-        long_size=long_size,
-        show_time=show_time,
-    )
+    prediction_result = get_prediction(image=image, craft_net=craft_net, refine_net=refine_net,
+                                       text_threshold=text_threshold, link_threshold=link_threshold, low_text=low_text,
+                                       long_size=long_size, cuda=cuda, show_time=show_time)
 
     # arange regions
     if crop_type == "box":

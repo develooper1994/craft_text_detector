@@ -17,9 +17,15 @@ from craft_text_detector.models.refinenet import RefineNet
 
 from collections import OrderedDict
 
-CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
+# CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
+# REFINENET_GDRIVE_URL = (
+#     "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
+# )
+
+# my google drive
+CRAFT_GDRIVE_URL = "https://drive.google.com/open?id=1CV3Ao4zuDikOkuHHNCw0_YRVWq7YsPBQ"
 REFINENET_GDRIVE_URL = (
-    "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
+    "https://drive.google.com/open?id=1ZDe0WRwlxLRkwofQt8C18ZTF-oA3vbfs"
 )
 
 
@@ -65,7 +71,7 @@ def to_cuda(net, weight_path, cuda: bool = False):
         net = net.cuda()  # TODO! replace .cuda with .device beginning of the module.
         net = torch.nn.DataParallel(net)
         cudnn.enabled = True
-        cudnn.benchmark = False  # TODO! add benchmarkmode for faster operations
+        cudnn.benchmark = False  # TODO! add benchmark mode for faster operations
     else:
         net.load_state_dict(
             copyStateDict(torch.load(weight_path, map_location="cpu"))
@@ -96,11 +102,9 @@ def load_refinenet_model(cuda: bool = False, refinenet_model_path=None):
     return to_cuda(refine_net, weight_path, cuda)
 
 
-def get_prediction(image, craft_net, refine_net=None,
-                   text_threshold: float = 0.7, link_threshold: float = 0.4, low_text: float = 0.4,
-                   cuda: bool = False, long_size: int = 1280,
-                   poly: bool = True, show_time: bool = False,
-                   ):
+def get_prediction(image, craft_net, refine_net=None, text_threshold: float = 0.7, link_threshold: float = 0.4,
+                   low_text: float = 0.4, long_size: int = 1280, cuda: bool = False, poly: bool = True,
+                   show_time: bool = False):
     """
     Arguments:
         image: image to be processed
@@ -221,3 +225,107 @@ def get_prediction(image, craft_net, refine_net=None,
         },
         "times": times,
     }
+
+
+class predict:
+    def __init__(self):
+        CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
+        REFINENET_GDRIVE_URL = (
+            "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
+        )
+
+    def __call__(self, *args, **kwargs):
+        pass
+
+    def get_weight_path(self, craft_model_path, net_name: str):
+        home_path = str(Path.home())
+        weight_path = os.path.join(
+            home_path, ".craft_text_detector", "weights", net_name
+        )
+        # check if weights are already downloaded, if not download
+        if os.path.isfile(weight_path) is not True:
+            print("Craft text detector weight will be downloaded to {}".format(weight_path))
+            if craft_model_path is None:
+                url = CRAFT_GDRIVE_URL
+                file_utils.download(url=url, save_path=weight_path)
+            else:
+                # TODO! give path to load craft_model
+                weight_path = craft_model_path
+        return weight_path
+
+    def to_cuda(self, net, weight_path, cuda: bool = False):
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        assert device, "!!!CUDA is not available!!!"
+        if device and cuda:  # Double check
+            net.load_state_dict(copyStateDict(torch.load(weight_path)))
+
+            net = net.cuda()  # TODO! replace .cuda with .device beginning of the module.
+            net = torch.nn.DataParallel(net)
+            cudnn.enabled = True
+            cudnn.benchmark = False  # TODO! add benchmark mode for faster operations
+        else:
+            net.load_state_dict(
+                copyStateDict(torch.load(weight_path, map_location="cpu"))
+            )
+        net.eval()
+        return net
+
+    def load_craftnet_model(self, cuda: bool = False, craft_model_path=None):
+        # load craft net
+        craft_net = CRAFT()  # initialize
+
+        # get craft net path
+        weight_path = get_weight_path(craft_model_path, "craft_mlt_25k.pth")
+
+        # arange device
+        return to_cuda(craft_net, weight_path, cuda)
+
+    def load_refinenet_model(self, cuda: bool = False, refinenet_model_path=None):
+        # load refine net
+        refine_net = RefineNet()  # initialize
+
+        # get refine net path
+        weight_path = get_weight_path(refinenet_model_path, "craft_refiner_CTW1500.pth")
+
+        # arange device
+        return to_cuda(refine_net, weight_path, cuda)
+
+
+if __name__ == "__main__":
+    import craft_text_detector as craft
+
+    # set image path and export folder directory
+    image_name = 'a8.png'
+    image_path = '../figures/IAM8/'+image_name
+    output_dir = 'outputs/'
+
+    # read image
+    image = craft.read_image(image_path)
+
+    # load models
+    craft_net = craft.load_craftnet_model()
+    refine_net = craft.load_refinenet_model()
+
+    # perform prediction
+    # TODO!  cuda=True -->> error
+    prediction_result = craft.get_prediction(image=image, craft_net=craft_net, refine_net=refine_net,
+                                             text_threshold=0.7, link_threshold=0.4, low_text=0.4, long_size=1280,
+                                             cuda=False, show_time=True)
+
+    # export detected text regions
+    exported_file_paths = craft.export_detected_regions(
+        image_path=image_path,
+        image=image,
+        regions=prediction_result["boxes"],
+        output_dir=output_dir,
+        rectify=True
+    )
+
+    # export heatmap, detection points, box visualization
+    craft.export_extra_results(
+        image_path=image_path,
+        image=image,
+        regions=prediction_result["boxes"],
+        heatmaps=prediction_result["heatmaps"],
+        output_dir=output_dir
+    )
