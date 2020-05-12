@@ -24,10 +24,9 @@ Steps to reproduce the behavior:
 
 ## Environment
 
- - craft-text-detector version (e.g., 0.1.7):
- - Python version (e.g., 3.6/3.7):
+ - craft_text_detector version (e.g., 0.2.1):
+ - Python version (e.g., 3.6/3.7/3.8):
  - OS (e.g., Linux/Windows/MacOS):
- - How you installed albumentations (`conda`, `pip`, source):
  - Any other relevant information:
 
 ## Additional context

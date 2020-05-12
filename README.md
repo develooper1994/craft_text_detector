@@ -3,11 +3,15 @@ https://pypi.org/project/craft-text-detector/
 
 [![CI](https://github.com/fcakyon/craft-text-detector/workflows/CI/badge.svg)](https://github.com/fcakyon/craft-text-detector/actions?query=event%3Apush+branch%3Amaster+is%3Acompleted+workflow%3ACI)
 
-Packaged, Pytorch-based, easy to use, cross-platform version of the CRAFT text detector | [Paper](https://arxiv.org/abs/1904.01941) |
+Packaged, Pytorch-based, easy to use, cross-platform version of the CRAFT text detector | 
+[Paper](https://arxiv.org/abs/1904.01941) |
 
 ## Overview
 
-PyTorch implementation for CRAFT text detector that effectively detect text area by exploring each character region and affinity between characters. The bounding box of texts are obtained by simply finding minimum bounding rectangles on binary map after thresholding character region and affinity scores.
+PyTorch implementation for CRAFT text detector that effectively detect text area by exploring 
+each character region and affinity between characters. The bounding box of texts are obtained 
+by simply finding minimum bounding rectangles on binary map after thresholding character region 
+and affinity scores.
 
 <img width="1172" alt="teaser" src="./figures/craft_example.gif">
 
