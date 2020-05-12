@@ -1,7 +1,7 @@
 import unittest
 import craft_text_detector
 
-image_path = 'figures/idcard.png'
+image_path = '../figures/idcard.png'
 
 
 class TestCraftTextDetector(unittest.TestCase):
