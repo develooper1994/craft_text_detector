@@ -144,8 +144,10 @@ def get_prediction(image, craft_net, refine_net=None, text_threshold: float = 0.
     x = Variable(x.unsqueeze(0))  # [c, h, w] to [b, c, h, w]
     if cuda:
         x = x.cuda()
-        craft_net = craft_net.cuda()
-        refine_net = refine_net.cuda()
+        if not craft_net is None:
+            craft_net = craft_net.cuda()
+        if not refine_net is None:
+            refine_net = refine_net.cuda()
     preprocessing_time = time.time() - t0
     t0 = time.time()
 

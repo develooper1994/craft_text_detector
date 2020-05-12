@@ -2,6 +2,8 @@ import unittest
 import craft_text_detector
 
 image_path = '../figures/idcard.png'
+cuda = True  # False
+show_time = False
 
 
 class TestCraftTextDetector(unittest.TestCase):
@@ -25,8 +27,6 @@ class TestCraftTextDetector(unittest.TestCase):
         text_threshold = 0.9
         link_threshold = 0.2
         low_text = 0.2
-        cuda = False
-        show_time = False
         get_prediction = craft_text_detector.get_prediction
         prediction_result = get_prediction(image=image,
                                            craft_net=craft_net,
@@ -66,7 +66,7 @@ class TestCraftTextDetector(unittest.TestCase):
     def test_detect_text(self):
         prediction_result = craft_text_detector.detect_text(image_path=image_path, output_dir=None, rectify=True,
                                                             export_extra=False, text_threshold=0.7, link_threshold=0.4,
-                                                            low_text=0.4, long_size=720, cuda=False, show_time=False,
+                                                            low_text=0.4, long_size=720, cuda=cuda, show_time=show_time,
                                                             refiner=False, crop_type="poly")
         # !!! get_prediction.py -> get_prediction(...)
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
@@ -84,13 +84,13 @@ class TestCraftTextDetector(unittest.TestCase):
 
         prediction_result = craft_text_detector.detect_text(image_path=image_path, output_dir=None, rectify=True,
                                                             export_extra=False, text_threshold=0.7, link_threshold=0.4,
-                                                            low_text=0.4, long_size=720, cuda=False, show_time=False,
+                                                            low_text=0.4, long_size=720, cuda=cuda, show_time=show_time,
                                                             refiner=True, crop_type="poly")
         self.prediction_result_compare(prediction_result)
 
         prediction_result = craft_text_detector.detect_text(image_path=image_path, output_dir=None, rectify=False,
                                                             export_extra=False, text_threshold=0.7, link_threshold=0.4,
-                                                            low_text=0.4, long_size=720, cuda=False, show_time=False,
+                                                            low_text=0.4, long_size=720, cuda=cuda, show_time=show_time,
                                                             refiner=False, crop_type="box")
         # !!! get_prediction.py -> get_prediction(...)
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
@@ -108,7 +108,7 @@ class TestCraftTextDetector(unittest.TestCase):
 
         prediction_result = craft_text_detector.detect_text(image_path=image_path, output_dir=None, rectify=False,
                                                             export_extra=False, text_threshold=0.7, link_threshold=0.4,
-                                                            low_text=0.4, long_size=720, cuda=False, show_time=False,
+                                                            low_text=0.4, long_size=720, cuda=cuda, show_time=show_time,
                                                             refiner=True, crop_type="box")
         self.prediction_result_compare(prediction_result)
 
