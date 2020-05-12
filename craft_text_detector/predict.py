@@ -2,17 +2,18 @@ import os
 import time
 from pathlib import Path
 
-import torch
-import torch.backends.cudnn as cudnn
-from torch.autograd import Variable
-
 import cv2
 import numpy as np
+
+import torch
+from torch.backends import cudnn
+from torch.autograd import Variable
 
 import craft_text_detector.craft_utils as craft_utils
 import craft_text_detector.imgproc as imgproc
 import craft_text_detector.file_utils as file_utils
 from craft_text_detector.models.craftnet import CRAFT
+from craft_text_detector.models.refinenet import RefineNet
 
 from collections import OrderedDict
 
@@ -38,82 +39,68 @@ def str2bool(v):
     return v.lower() in ("yes", "y", "true", "t", "1")
 
 
-def load_craftnet_model(cuda: bool = False):
-    # get craft net path
+def get_weight_path(craft_model_path, net_name: str):
     home_path = str(Path.home())
     weight_path = os.path.join(
-        home_path, ".craft_text_detector", "weights", "craft_mlt_25k.pth"
+        home_path, ".craft_text_detector", "weights", net_name
     )
+    # check if weights are already downloaded, if not download
+    if os.path.isfile(weight_path) is not True:
+        print("Craft text detector weight will be downloaded to {}".format(weight_path))
+        if craft_model_path is None:
+            url = CRAFT_GDRIVE_URL
+            file_utils.download(url=url, save_path=weight_path)
+        else:
+            # TODO! give path to load craft_model
+            weight_path = craft_model_path
+    return weight_path
+
+
+def to_cuda(net, weight_path, cuda: bool = False):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    assert device, "!!!CUDA is not available!!!"
+    if device and cuda:  # Double check
+        net.load_state_dict(copyStateDict(torch.load(weight_path)))
+
+        net = net.cuda()  # TODO! replace .cuda with .device beginning of the module.
+        net = torch.nn.DataParallel(net)
+        cudnn.enabled = True
+        cudnn.benchmark = False  # TODO! add benchmarkmode for faster operations
+    else:
+        net.load_state_dict(
+            copyStateDict(torch.load(weight_path, map_location="cpu"))
+        )
+    net.eval()
+    return net
+
+
+def load_craftnet_model(cuda: bool = False, craft_model_path=None):
     # load craft net
     craft_net = CRAFT()  # initialize
 
-    # check if weights are already downloaded, if not download
-    url = CRAFT_GDRIVE_URL
-    if os.path.isfile(weight_path) is not True:
-        print("Craft text detector weight will be downloaded to {}".format(weight_path))
-
-        file_utils.download(url=url, save_path=weight_path)
+    # get craft net path
+    weight_path = get_weight_path(craft_model_path, "craft_mlt_25k.pth")
 
     # arange device
-    if cuda:
-        craft_net.load_state_dict(copyStateDict(torch.load(weight_path)))
-
-        craft_net = craft_net.cuda()
-        craft_net = torch.nn.DataParallel(craft_net)
-        cudnn.benchmark = False
-    else:
-        craft_net.load_state_dict(
-            copyStateDict(torch.load(weight_path, map_location="cpu"))
-        )
-    craft_net.eval()
-    return craft_net
+    return to_cuda(craft_net, weight_path, cuda)
 
 
-def load_refinenet_model(cuda: bool = False):
-    # get refine net path
-    home_path = str(Path.home())
-    weight_path = os.path.join(
-        home_path, ".craft_text_detector", "weights", "craft_refiner_CTW1500.pth"
-    )
+def load_refinenet_model(cuda: bool = False, refinenet_model_path=None):
     # load refine net
-    from craft_text_detector.models.refinenet import RefineNet
-
     refine_net = RefineNet()  # initialize
 
-    # check if weights are already downloaded, if not download
-    url = REFINENET_GDRIVE_URL
-    if os.path.isfile(weight_path) is not True:
-        print("Craft text refiner weight will be downloaded to {}".format(weight_path))
-
-        file_utils.download(url=url, save_path=weight_path)
+    # get refine net path
+    weight_path = get_weight_path(refinenet_model_path, "craft_refiner_CTW1500.pth")
 
     # arange device
-    if cuda:
-        refine_net.load_state_dict(copyStateDict(torch.load(weight_path)))
-
-        refine_net = refine_net.cuda()
-        refine_net = torch.nn.DataParallel(refine_net)
-        cudnn.benchmark = False
-    else:
-        refine_net.load_state_dict(
-            copyStateDict(torch.load(weight_path, map_location="cpu"))
-        )
-    refine_net.eval()
-    return refine_net
+    return to_cuda(refine_net, weight_path, cuda)
 
 
-def get_prediction(
-    image,
-    craft_net,
-    refine_net=None,
-    text_threshold: float = 0.7,
-    link_threshold: float = 0.4,
-    low_text: float = 0.4,
-    cuda: bool = False,
-    long_size: int = 1280,
-    poly: bool = True,
-    show_time: bool = False,
-):
+def get_prediction(image, craft_net, refine_net=None,
+                   text_threshold: float = 0.7, link_threshold: float = 0.4, low_text: float = 0.4,
+                   cuda: bool = False, long_size: int = 1280,
+                   poly: bool = True, show_time: bool = False,
+                   ):
     """
     Arguments:
         image: image to be processed
@@ -139,8 +126,9 @@ def get_prediction(
     t0 = time.time()
 
     # resize
+    # TODO! interpolation=cv2.INTER_CUBIC
     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        image, long_size, interpolation=cv2.INTER_LINEAR
+        image, long_size, interpolation=cv2.INTER_CUBIC
     )
     ratio_h = ratio_w = 1 / target_ratio
     resize_time = time.time() - t0
@@ -162,14 +150,15 @@ def get_prediction(
     t0 = time.time()
 
     # make score and link map
-    score_text = y[0, :, :, 0].cpu().data.numpy()
-    score_link = y[0, :, :, 1].cpu().data.numpy()
+    # TODO! test .detach()
+    score_text = y[0, :, :, 0].detach().cpu().data.numpy()
+    score_link = y[0, :, :, 1].detach().cpu().data.numpy()
 
     # refine link
     if refine_net is not None:
         with torch.no_grad():
             y_refiner = refine_net(y, feature)
-        score_link = y_refiner[0, :, :, 0].cpu().data.numpy()
+        score_link = y_refiner[0, :, :, 0].detach().cpu().data.numpy()
     refinenet_time = time.time() - t0
     t0 = time.time()
 
@@ -232,4 +221,3 @@ def get_prediction(
         },
         "times": times,
     }
-
