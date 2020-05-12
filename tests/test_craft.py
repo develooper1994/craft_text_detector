@@ -64,18 +64,10 @@ class TestCraftTextDetector(unittest.TestCase):
         self.assertEqual(prediction_result["heatmaps"]["text_score_heatmap"].shape, (240, 368, 3))
 
     def test_detect_text(self):
-        prediction_result = craft_text_detector.detect_text(image_path=image_path,
-                                                            output_dir=None,
-                                                            rectify=True,
-                                                            export_extra=False,
-                                                            text_threshold=0.7,
-                                                            link_threshold=0.4,
-                                                            low_text=0.4,
-                                                            cuda=False,
-                                                            long_size=720,
-                                                            show_time=False,
-                                                            refiner=False,
-                                                            crop_type="poly")
+        prediction_result = craft_text_detector.detect_text(image_path=image_path, output_dir=None, rectify=True,
+                                                            export_extra=False, text_threshold=0.7, link_threshold=0.4,
+                                                            low_text=0.4, long_size=720, cuda=False, show_time=False,
+                                                            refiner=False, crop_type="poly")
         # !!! get_prediction.py -> get_prediction(...)
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
         #         image, long_size, interpolation=cv2.INTER_LINEAR
@@ -90,32 +82,16 @@ class TestCraftTextDetector(unittest.TestCase):
         self.assertEqual(len(prediction_result["boxes"][0][0]), 2)
         self.assertEqual(int(prediction_result["boxes"][0][0][0]), 115)
 
-        prediction_result = craft_text_detector.detect_text(image_path=image_path,
-                                                            output_dir=None,
-                                                            rectify=True,
-                                                            export_extra=False,
-                                                            text_threshold=0.7,
-                                                            link_threshold=0.4,
-                                                            low_text=0.4,
-                                                            cuda=False,
-                                                            long_size=720,
-                                                            show_time=False,
-                                                            refiner=True,
-                                                            crop_type="poly")
+        prediction_result = craft_text_detector.detect_text(image_path=image_path, output_dir=None, rectify=True,
+                                                            export_extra=False, text_threshold=0.7, link_threshold=0.4,
+                                                            low_text=0.4, long_size=720, cuda=False, show_time=False,
+                                                            refiner=True, crop_type="poly")
         self.prediction_result_compare(prediction_result)
 
-        prediction_result = craft_text_detector.detect_text(image_path=image_path,
-                                                            output_dir=None,
-                                                            rectify=False,
-                                                            export_extra=False,
-                                                            text_threshold=0.7,
-                                                            link_threshold=0.4,
-                                                            low_text=0.4,
-                                                            cuda=False,
-                                                            long_size=720,
-                                                            show_time=False,
-                                                            refiner=False,
-                                                            crop_type="box")
+        prediction_result = craft_text_detector.detect_text(image_path=image_path, output_dir=None, rectify=False,
+                                                            export_extra=False, text_threshold=0.7, link_threshold=0.4,
+                                                            low_text=0.4, long_size=720, cuda=False, show_time=False,
+                                                            refiner=False, crop_type="box")
         # !!! get_prediction.py -> get_prediction(...)
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
         #         image, long_size, interpolation=cv2.INTER_LINEAR
@@ -130,18 +106,10 @@ class TestCraftTextDetector(unittest.TestCase):
         self.assertEqual(len(prediction_result["boxes"][0][0]), 2)
         self.assertEqual(int(prediction_result["boxes"][0][2][0]), 244)
 
-        prediction_result = craft_text_detector.detect_text(image_path=image_path,
-                                                            output_dir=None,
-                                                            rectify=False,
-                                                            export_extra=False,
-                                                            text_threshold=0.7,
-                                                            link_threshold=0.4,
-                                                            low_text=0.4,
-                                                            cuda=False,
-                                                            long_size=720,
-                                                            show_time=False,
-                                                            refiner=True,
-                                                            crop_type="box")
+        prediction_result = craft_text_detector.detect_text(image_path=image_path, output_dir=None, rectify=False,
+                                                            export_extra=False, text_threshold=0.7, link_threshold=0.4,
+                                                            low_text=0.4, long_size=720, cuda=False, show_time=False,
+                                                            refiner=True, crop_type="box")
         self.prediction_result_compare(prediction_result)
 
     def prediction_result_compare(self, prediction_result):

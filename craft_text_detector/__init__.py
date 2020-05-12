@@ -17,20 +17,8 @@ craft_net = load_craftnet_model()
 
 
 # detect texts
-def detect_text(
-    image_path,
-    output_dir=None,
-    rectify=True,
-    export_extra=True,
-    text_threshold=0.7,
-    link_threshold=0.4,
-    low_text=0.4,
-    cuda=False,
-    long_size=1280,
-    show_time=False,
-    refiner=True,
-    crop_type="poly",
-):
+def detect_text(image_path, output_dir=None, rectify=True, export_extra=True, text_threshold=0.7, link_threshold=0.4,
+                low_text=0.4, long_size=1280, cuda=False, show_time=False, refiner=True, crop_type="poly"):
     """
     Arguments:
         image_path: path to the image to be processed

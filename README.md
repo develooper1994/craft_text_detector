@@ -22,7 +22,7 @@ and affinity scores.
 ```console
 pip install git+https://github.com/develooper1994/craft_text_detector
 ```
-
+or
 ```download and install
 python setup.py install
 ```
@@ -38,7 +38,7 @@ image_path = 'figures/idcard.png'
 output_dir = 'outputs/'
 
 # apply craft text detection and export detected regions to output directory
-prediction_result = craft.detect_text(image_path, output_dir, crop_type="poly", cuda=False)
+prediction_result = craft.detect_text(image_path,output_dir,cuda=False,crop_type="poly")
 ```
 
 ### Advanced Usage

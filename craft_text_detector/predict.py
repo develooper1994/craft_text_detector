@@ -62,7 +62,7 @@ def get_weight_path(craft_model_path, net_name: str):
     return weight_path
 
 
-def to_cuda(net, weight_path, cuda: bool = False):
+def net_to_cuda(net, weight_path, cuda: bool = False):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     assert device, "!!!CUDA is not available!!!"
     if device and cuda:  # Double check
@@ -88,7 +88,7 @@ def load_craftnet_model(cuda: bool = False, craft_model_path=None):
     weight_path = get_weight_path(craft_model_path, "craft_mlt_25k.pth")
 
     # arange device
-    return to_cuda(craft_net, weight_path, cuda)
+    return net_to_cuda(craft_net, weight_path, cuda)
 
 
 def load_refinenet_model(cuda: bool = False, refinenet_model_path=None):
@@ -99,7 +99,7 @@ def load_refinenet_model(cuda: bool = False, refinenet_model_path=None):
     weight_path = get_weight_path(refinenet_model_path, "craft_refiner_CTW1500.pth")
 
     # arange device
-    return to_cuda(refine_net, weight_path, cuda)
+    return net_to_cuda(refine_net, weight_path, cuda)
 
 
 def get_prediction(image, craft_net, refine_net=None, text_threshold: float = 0.7, link_threshold: float = 0.4,
@@ -144,6 +144,8 @@ def get_prediction(image, craft_net, refine_net=None, text_threshold: float = 0.
     x = Variable(x.unsqueeze(0))  # [c, h, w] to [b, c, h, w]
     if cuda:
         x = x.cuda()
+        craft_net = craft_net.cuda()
+        refine_net = refine_net.cuda()
     preprocessing_time = time.time() - t0
     t0 = time.time()
 
@@ -278,7 +280,7 @@ class predict:
         weight_path = get_weight_path(craft_model_path, "craft_mlt_25k.pth")
 
         # arange device
-        return to_cuda(craft_net, weight_path, cuda)
+        return net_to_cuda(craft_net, weight_path, cuda)
 
     def load_refinenet_model(self, cuda: bool = False, refinenet_model_path=None):
         # load refine net
@@ -288,7 +290,7 @@ class predict:
         weight_path = get_weight_path(refinenet_model_path, "craft_refiner_CTW1500.pth")
 
         # arange device
-        return to_cuda(refine_net, weight_path, cuda)
+        return net_to_cuda(refine_net, weight_path, cuda)
 
 
 if __name__ == "__main__":
@@ -310,7 +312,7 @@ if __name__ == "__main__":
     # TODO!  cuda=True -->> error
     prediction_result = craft.get_prediction(image=image, craft_net=craft_net, refine_net=refine_net,
                                              text_threshold=0.7, link_threshold=0.4, low_text=0.4, long_size=1280,
-                                             cuda=False, show_time=True)
+                                             cuda=True, show_time=True)
 
     # export detected text regions
     exported_file_paths = craft.export_detected_regions(
