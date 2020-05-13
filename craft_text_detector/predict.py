@@ -2,24 +2,27 @@ import time
 
 import cv2
 import numpy as np
-
 import torch
-from torch.backends import cudnn
 from torch.autograd import Variable
+from torch.backends import cudnn
 
-from craft_text_detector import craft_utils, read_image, export_detected_regions, export_extra_results
+from craft_text_detector import (
+    craft_utils,
+    read_image,
+    export_detected_regions,
+    export_extra_results,
+)
 from craft_text_detector import imgproc
 from craft_text_detector.models.craftnet import CRAFT
 from craft_text_detector.models.refinenet import RefineNet
+# my google drive
+from craft_text_detector.predict_util import copyStateDict, get_weight_path
 
 # Original
 # CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
 # REFINENET_GDRIVE_URL = (
 #     "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
 # )
-
-# my google drive
-from craft_text_detector.predict_util import copyStateDict, get_weight_path
 
 CRAFT_GDRIVE_URL = "https://drive.google.com/open?id=1CV3Ao4zuDikOkuHHNCw0_YRVWq7YsPBQ"
 REFINENET_GDRIVE_URL = (
@@ -28,6 +31,7 @@ REFINENET_GDRIVE_URL = (
 
 
 # !!! Legacy functional Way. DON'T TOUCH IT!!!
+# TODO! Provide better legacy-functional interface
 def net_to_cuda(net, weight_path, cuda: bool = False):
     is_device = torch.cuda.is_available()
     # device = torch.device('cuda' if is_device else 'cpu')
@@ -212,51 +216,63 @@ def get_prediction(image, craft_net, refine_net=None, text_threshold: float = 0.
 # !!! New oops way.
 class predict:
     def __init__(self, image=None, refiner=True, craft_model_path=None, refinenet_model_path=None, cuda: bool = False):
-        self.image = image
-        if isinstance(image, str):
-            # consider image is image_path
-            self.image = read_image(image)
+        self.reload(image=image, refiner=refiner, craft_model_path=craft_model_path,
+                    refinenet_model_path=refinenet_model_path, cuda=cuda)
+
+    def __call__(self, *args, **kwargs):
+        return self.get_prediction(**kwargs)
+
+    def reload(self, image=None, refiner=True, craft_model_path=None, refinenet_model_path=None, cuda: bool = False,
+               benchmark: bool = False):
+        # load craft input image
+        self.__set_image(image)
         # load craft net
         self.craft_net = CRAFT()  # initialize
-
         # load refine net
         self.refine_net = RefineNet()  # initialize
-
         # Double check device
+        self.__set_device(cuda, benchmark)
+        # Original
+        # CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
+        # REFINENET_GDRIVE_URL = (
+        #     "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
+        # )
+        # my google drive
+        self.CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
+        self.craft_model_name = "craft_mlt_25k.pth"
+        self.craft_model_path = craft_model_path
+        self.craft_net = self.__load_craftnet_model(self.craft_model_path)
+        self.REFINENET_GDRIVE_URL = (
+            "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
+        )
+        self.refinenet_model_name = "craft_refiner_CTW1500.pth"
+        self.refinenet_model_path = refinenet_model_path
+        self.__set_refiner(refiner)
+
+    def __set_image(self, image):
+        self.image = image
+        if isinstance(image, str):
+            # consider image is image
+            self.image = read_image(image)
+
+    def __set_device(self, cuda: bool = False, benchmark: bool = False):
         self.cuda = cuda
+        self.benchmark = benchmark
         self.is_device = torch.cuda.is_available()
         # self.device = torch.device('cuda' if self.is_device and self.cuda else 'cpu')
         if self.cuda and self.is_device:
             assert self.is_device, "!!!CUDA is not available!!!"
             self.device = torch.device('cuda')
             cudnn.enabled = True
-            cudnn.benchmark = False  # TODO! add benchmark mode for faster operations
+            cudnn.benchmark = self.benchmark
         else:
             self.device = torch.device('cpu')
 
-        # Original
-        # CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
-        # REFINENET_GDRIVE_URL = (
-        #     "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
-        # )
-
-        # my google drive
-        self.CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
-        self.craft_model_name = "craft_mlt_25k.pth"
-        self.craft_model_path = craft_model_path
-        self.craft_net = self.load_craftnet_model(self.craft_model_path)
-        self.REFINENET_GDRIVE_URL = (
-            "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
-        )
-        self.refinenet_model_name = "craft_refiner_CTW1500.pth"
-        self.refinenet_model_path = refinenet_model_path
+    def __set_refiner(self, refiner: bool = True):
         if refiner:
-            self.refine_net = self.load_refinenet_model(self.refinenet_model_path)
+            self.refine_net = self.__load_refinenet_model(self.refinenet_model_path)
         else:
             self.refine_net = None
-
-    def __call__(self, *args, **kwargs):
-        return self.get_prediction(**kwargs)
 
     def get_prediction(self, image=None, text_threshold: float = 0.7, link_threshold: float = 0.4,
                        low_text: float = 0.4,
@@ -386,7 +402,7 @@ class predict:
                     link_threshold=0.4, low_text=0.4, long_size=1280, show_time=False, crop_type="poly"):
         """
         Arguments:
-            image_path: path to the image to be processed
+            image: path to the image to be processed
             output_dir: path to the results to be exported
             rectify: rectify detected polygon by affine transform
             export_extra: export heatmap, detection points, box visualization
@@ -412,7 +428,7 @@ class predict:
         if image is None:
             image = self.image
         elif isinstance(image, str):
-            # consider image is image_path
+            # consider image is image
             image = read_image(image)
 
         # perform prediction
@@ -454,7 +470,7 @@ class predict:
         # return prediction results
         return prediction_result
 
-    def net_to_cuda(self, net, weight_path):
+    def __net_to_cuda(self, net, weight_path):
         net.load_state_dict(copyStateDict(torch.load(weight_path)))
 
         net = net.to(self.device)
@@ -462,19 +478,21 @@ class predict:
         net.eval()
         return net
 
-    def load_craftnet_model(self, craft_model_path=None):
+    def __load_craftnet_model(self, craft_model_path=None):
         # get craft net path
         weight_path = get_weight_path(craft_model_path, self.CRAFT_GDRIVE_URL, self.craft_model_name)
 
         # arange device
-        return self.net_to_cuda(self.craft_net, weight_path)
+        craft_net = self.__net_to_cuda(self.craft_net, weight_path)
+        return craft_net
 
-    def load_refinenet_model(self, refinenet_model_path=None):
+    def __load_refinenet_model(self, refinenet_model_path=None):
         # get refine net path
         weight_path = get_weight_path(refinenet_model_path, self.REFINENET_GDRIVE_URL, "craft_refiner_CTW1500.pth")
 
         # arange device
-        return self.net_to_cuda(self.refine_net, weight_path)
+        refine_net = self.__net_to_cuda(self.refine_net, weight_path)
+        return refine_net
 
 
 if __name__ == "__main__":
@@ -485,13 +503,10 @@ if __name__ == "__main__":
 
 
     def test_oops(image_path, output_dir):
-        from craft_text_detector.imgproc import read_image
-
-        from craft_text_detector.file_utils import export_detected_regions, export_extra_results
         # read image
         image = read_image(image_path)
         # create predict class
-        pred = predict(image, cuda=True)
+        pred = predict(image=image, refiner=False, cuda=True)
         prediction_result = pred.detect_text(output_dir=None, rectify=True, export_extra=True,
                                              text_threshold=0.7,
                                              link_threshold=0.4,
@@ -521,5 +536,4 @@ if __name__ == "__main__":
         )
 
 
-    # test_functional(image_path, output_dir)  # 0.434/0.140
     test_oops(image_path, output_dir)  # 0.418/0.109
