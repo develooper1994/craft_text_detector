@@ -58,7 +58,9 @@ def load_craftnet_model(cuda: bool = False, craft_model_path=None):
     craft_net = CRAFT()  # initialize
 
     # get craft net path
-    weight_path = get_weight_path(craft_model_path, CRAFT_GDRIVE_URL, "craft_mlt_25k.pth")
+    weight_path = get_weight_path(craft_model_path,
+                                  CRAFT_GDRIVE_URL,
+                                  "craft_mlt_25k.pth")
 
     # arange device
     return net_to_cuda(craft_net, weight_path, cuda)
@@ -71,7 +73,9 @@ def load_refinenet_model(cuda: bool = False, refinenet_model_path=None):
     refine_net = RefineNet()  # initialize
 
     # get refine net path
-    weight_path = get_weight_path(refinenet_model_path, REFINENET_GDRIVE_URL, "craft_refiner_CTW1500.pth")
+    weight_path = get_weight_path(refinenet_model_path,
+                                  REFINENET_GDRIVE_URL,
+                                  "craft_refiner_CTW1500.pth")
 
     # arange device
     return net_to_cuda(refine_net, weight_path, cuda)
@@ -79,9 +83,14 @@ def load_refinenet_model(cuda: bool = False, refinenet_model_path=None):
     # return prediction_object.load_refinenet_model(refinenet_model_path)
 
 
-def get_prediction(image, craft_net, refine_net=None, text_threshold: float = 0.7,
+def get_prediction(image, craft_net,
+                   refine_net=None,
+                   text_threshold: float = 0.7,
                    link_threshold: float = 0.4,
-                   low_text: float = 0.4, long_size: int = 1280, cuda: bool = False, poly: bool = True,
+                   low_text: float = 0.4,
+                   long_size: int = 1280,
+                   cuda: bool = False,
+                   poly: bool = True,
                    show_time: bool = False):
     """
     Arguments:
@@ -208,21 +217,38 @@ def get_prediction(image, craft_net, refine_net=None, text_threshold: float = 0.
     # prediction_object.craft_net = craft_net
     # prediction_object.refine_net = refine_net
     # prediction_object.cuda = cuda
-    # return prediction_object.get_prediction(image=image, text_threshold=text_threshold, link_threshold=link_threshold,
+    # return prediction_object.get_prediction(image=image,
+    #                                         text_threshold=text_threshold,
+    #                                         link_threshold=link_threshold,
     #                                         low_text=low_text,
-    #                                         long_size=long_size, poly=poly, show_time=show_time)
+    #                                         long_size=long_size,
+    #                                         poly=poly,
+    #                                         show_time=show_time)
 
 
 # !!! New oops way.
 class predict:
-    def __init__(self, image=None, refiner=True, craft_model_path=None, refinenet_model_path=None, cuda: bool = False):
-        self.reload(image=image, refiner=refiner, craft_model_path=craft_model_path,
-                    refinenet_model_path=refinenet_model_path, cuda=cuda)
+    def __init__(self, image=None,
+                 refiner=True,
+                 craft_model_path=None,
+                 refinenet_model_path=None,
+                 cuda: bool = False,
+                 benchmark: bool = False):
+        self.reload(image=image,
+                    refiner=refiner,
+                    craft_model_path=craft_model_path,
+                    refinenet_model_path=refinenet_model_path,
+                    cuda=cuda,
+                    benchmark=benchmark)
 
     def __call__(self, *args, **kwargs):
         return self.get_prediction(**kwargs)
 
-    def reload(self, image=None, refiner=True, craft_model_path=None, refinenet_model_path=None, cuda: bool = False,
+    def reload(self, image=None,
+               refiner=True,
+               craft_model_path=None,
+               refinenet_model_path=None,
+               cuda: bool = False,
                benchmark: bool = False):
         # load craft input image
         self.__set_image(image)
@@ -274,9 +300,13 @@ class predict:
         else:
             self.refine_net = None
 
-    def get_prediction(self, image=None, text_threshold: float = 0.7, link_threshold: float = 0.4,
+    def get_prediction(self, image=None,
+                       text_threshold: float = 0.7,
+                       link_threshold: float = 0.4,
                        low_text: float = 0.4,
-                       long_size: int = 1280, poly: bool = True, show_time: bool = False):
+                       long_size: int = 1280,
+                       poly: bool = True,
+                       show_time: bool = False):
         """
         Arguments:
             image: image to be processed
@@ -398,8 +428,16 @@ class predict:
         }
 
     # detect texts
-    def detect_text(self, image=None, output_dir=None, rectify=True, export_extra=True, text_threshold=0.7,
-                    link_threshold=0.4, low_text=0.4, long_size=1280, show_time=False, crop_type="poly"):
+    def detect_text(self, image=None,
+                    output_dir=None,
+                    rectify=True,
+                    export_extra=True,
+                    text_threshold=0.7,
+                    link_threshold=0.4,
+                    low_text=0.4,
+                    long_size=1280,
+                    show_time=False,
+                    crop_type="poly"):
         """
         Arguments:
             image: path to the image to be processed
@@ -432,9 +470,12 @@ class predict:
             image = read_image(image)
 
         # perform prediction
-        prediction_result = self.get_prediction(image=image, text_threshold=text_threshold,
+        prediction_result = self.get_prediction(image=image,
+                                                text_threshold=text_threshold,
                                                 link_threshold=link_threshold,
-                                                low_text=low_text, long_size=long_size, show_time=show_time)
+                                                low_text=low_text,
+                                                long_size=long_size,
+                                                show_time=show_time)
 
         # arange regions
         if crop_type == "box":
@@ -480,7 +521,9 @@ class predict:
 
     def __load_craftnet_model(self, craft_model_path=None):
         # get craft net path
-        weight_path = get_weight_path(craft_model_path, self.CRAFT_GDRIVE_URL, self.craft_model_name)
+        weight_path = get_weight_path(craft_model_path,
+                                      self.CRAFT_GDRIVE_URL,
+                                      self.craft_model_name)
 
         # arange device
         craft_net = self.__net_to_cuda(self.craft_net, weight_path)
@@ -488,7 +531,9 @@ class predict:
 
     def __load_refinenet_model(self, refinenet_model_path=None):
         # get refine net path
-        weight_path = get_weight_path(refinenet_model_path, self.REFINENET_GDRIVE_URL, "craft_refiner_CTW1500.pth")
+        weight_path = get_weight_path(refinenet_model_path,
+                                      self.REFINENET_GDRIVE_URL,
+                                      "craft_refiner_CTW1500.pth")
 
         # arange device
         refine_net = self.__net_to_cuda(self.refine_net, weight_path)
@@ -507,16 +552,25 @@ if __name__ == "__main__":
         image = read_image(image_path)
         # create predict class
         pred = predict(image=image, refiner=False, cuda=True)
-        prediction_result = pred.detect_text(output_dir=None, rectify=True, export_extra=True,
+        prediction_result = pred.detect_text(output_dir=None,
+                                             rectify=True,
+                                             export_extra=True,
                                              text_threshold=0.7,
                                              link_threshold=0.4,
-                                             low_text=0.4, long_size=1280, show_time=False, crop_type="poly")
+                                             low_text=0.4,
+                                             long_size=1280,
+                                             show_time=False,
+                                             crop_type="poly")
         print(len(prediction_result["boxes"]))  # 51
         print(len(prediction_result["boxes"][0]))  # 4
         print(len(prediction_result["boxes"][0][0]))  # 2
         print(int(prediction_result["boxes"][0][0][0]))  # 115
         # perform prediction
-        prediction_result = pred(image=image, text_threshold=0.7, link_threshold=0.4, low_text=0.4, long_size=1280,
+        prediction_result = pred(image=image,
+                                 text_threshold=0.7,
+                                 link_threshold=0.4,
+                                 low_text=0.4,
+                                 long_size=1280,
                                  show_time=True)
         # export detected text regions
         exported_file_paths = export_detected_regions(

@@ -47,10 +47,15 @@ def detect_text(image, output_dir=None, rectify=True, export_extra=True,
     # load craft model
     craft_net = predict(image=image, refiner=refiner, cuda=cuda)
 
-    prediction_result = craft_net.detect_text(image=image, output_dir=output_dir, rectify=rectify,
+    prediction_result = craft_net.detect_text(image=image,
+                                              output_dir=output_dir,
+                                              rectify=rectify,
                                               export_extra=export_extra,
-                                              text_threshold=text_threshold, link_threshold=link_threshold,
-                                              low_text=low_text, long_size=long_size, show_time=show_time,
+                                              text_threshold=text_threshold,
+                                              link_threshold=link_threshold,
+                                              low_text=low_text,
+                                              long_size=long_size,
+                                              show_time=show_time,
                                               crop_type=crop_type)
 
     # return prediction results
