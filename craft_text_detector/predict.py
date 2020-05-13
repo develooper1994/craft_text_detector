@@ -45,7 +45,7 @@ def str2bool(v):
     return v.lower() in ("yes", "y", "true", "t", "1")
 
 
-def get_weight_path(craft_model_path, net_name: str):
+def get_weight_path(model_path, model_url, net_name: str):
     home_path = str(Path.home())
     weight_path = os.path.join(
         home_path, ".craft_text_detector", "weights", net_name
@@ -53,12 +53,12 @@ def get_weight_path(craft_model_path, net_name: str):
     # check if weights are already downloaded, if not download
     if os.path.isfile(weight_path) is not True:
         print("Craft text detector weight will be downloaded to {}".format(weight_path))
-        if craft_model_path is None:
-            url = CRAFT_GDRIVE_URL
+        if model_path is None:
+            url = model_url
             file_utils.download(url=url, save_path=weight_path)
         else:
             # TODO! give path to load craft_model
-            weight_path = craft_model_path
+            weight_path = model_path
     return weight_path
 
 
@@ -85,7 +85,7 @@ def load_craftnet_model(cuda: bool = False, craft_model_path=None):
     craft_net = CRAFT()  # initialize
 
     # get craft net path
-    weight_path = get_weight_path(craft_model_path, "craft_mlt_25k.pth")
+    weight_path = get_weight_path(craft_model_path, CRAFT_GDRIVE_URL, "craft_mlt_25k.pth")
 
     # arange device
     return net_to_cuda(craft_net, weight_path, cuda)
@@ -96,7 +96,7 @@ def load_refinenet_model(cuda: bool = False, refinenet_model_path=None):
     refine_net = RefineNet()  # initialize
 
     # get refine net path
-    weight_path = get_weight_path(refinenet_model_path, "craft_refiner_CTW1500.pth")
+    weight_path = get_weight_path(refinenet_model_path, REFINENET_GDRIVE_URL, "craft_refiner_CTW1500.pth")
 
     # arange device
     return net_to_cuda(refine_net, weight_path, cuda)
@@ -233,15 +233,15 @@ def get_prediction(image, craft_net, refine_net=None, text_threshold: float = 0.
 
 class predict:
     def __init__(self):
-        CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
-        REFINENET_GDRIVE_URL = (
+        self.CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
+        self.REFINENET_GDRIVE_URL = (
             "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
         )
 
     def __call__(self, *args, **kwargs):
         pass
 
-    def get_weight_path(self, craft_model_path, net_name: str):
+    def get_weight_path(self, model_path, model_url, net_name: str):
         home_path = str(Path.home())
         weight_path = os.path.join(
             home_path, ".craft_text_detector", "weights", net_name
@@ -249,12 +249,12 @@ class predict:
         # check if weights are already downloaded, if not download
         if os.path.isfile(weight_path) is not True:
             print("Craft text detector weight will be downloaded to {}".format(weight_path))
-            if craft_model_path is None:
-                url = CRAFT_GDRIVE_URL
+            if model_path is None:
+                url = model_url
                 file_utils.download(url=url, save_path=weight_path)
             else:
                 # TODO! give path to load craft_model
-                weight_path = craft_model_path
+                weight_path = model_path
         return weight_path
 
     def to_cuda(self, net, weight_path, cuda: bool = False):
@@ -279,7 +279,7 @@ class predict:
         craft_net = CRAFT()  # initialize
 
         # get craft net path
-        weight_path = get_weight_path(craft_model_path, "craft_mlt_25k.pth")
+        weight_path = self.get_weight_path(craft_model_path, self.CRAFT_GDRIVE_URL, "craft_mlt_25k.pth")
 
         # arange device
         return net_to_cuda(craft_net, weight_path, cuda)
@@ -289,7 +289,7 @@ class predict:
         refine_net = RefineNet()  # initialize
 
         # get refine net path
-        weight_path = get_weight_path(refinenet_model_path, "craft_refiner_CTW1500.pth")
+        weight_path = get_weight_path(refinenet_model_path, self.REFINENET_GDRIVE_URL, "craft_refiner_CTW1500.pth")
 
         # arange device
         return net_to_cuda(refine_net, weight_path, cuda)
