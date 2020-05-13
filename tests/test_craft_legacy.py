@@ -20,8 +20,9 @@ class TestCraftTextDetector(unittest.TestCase):
         image = craft_text_detector.read_image(image_path)
 
         # load models
-        craft_net = craft_text_detector.load_craftnet_model()
         refine_net = None
+        # pred = craft_text_detector.predict(image, refine_net)
+        craft_net = craft_text_detector.load_craftnet_model()
 
         # perform prediction
         text_threshold = 0.9
