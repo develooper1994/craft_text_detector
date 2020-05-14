@@ -8,11 +8,11 @@ from craft_text_detector.imgproc import read_image
 
 from craft_text_detector.file_utils import export_detected_regions, export_extra_results
 
-from craft_text_detector.predict import (
+from craft_text_detector.craft_detector import (
     load_craftnet_model,
     load_refinenet_model,
     get_prediction,
-    predict,
+    craft_detector,
 )
 
 
@@ -22,30 +22,32 @@ def detect_text(image, output_dir=None, rectify=True, export_extra=True,
                 cuda=False, show_time=False,
                 refiner=True, crop_type="poly"):
     """
-    Arguments:
-        image: path to the image to be processed
-        output_dir: path to the results to be exported
-        rectify: rectify detected polygon by affine transform
-        export_extra: export heatmap, detection points, box visualization
-        text_threshold: text confidence threshold
-        link_threshold: link confidence threshold
-        low_text: text low-bound score
-        cuda: Use cuda for inference
-        long_size: desired longest image size for inference
-        show_time: show processing time
-        refiner: enable link refiner
-        crop_type: crop regions by detected boxes or polys ("poly" or "box")
-    Output:
-        {"masks": lists of predicted masks 2d as bool array,
-         "boxes": list of coords of points of predicted boxes,
-         "boxes_as_ratios": list of coords of points of predicted boxes as ratios of image size,
-         "polys_as_ratios": list of coords of points of predicted polys as ratios of image size,
-         "heatmaps": visualization of the detected characters/links,
-         "text_crop_paths": list of paths of the exported text boxes/polys,
-         "times": elapsed times of the sub modules, in seconds}
+    Detects text but has some extra functionalities.
+    :param image: path to the image to be processed
+    :param output_dir: path to the results to be exported
+    :param rectify: rectify detected polygon by affine transform
+    :param export_extra: export heatmap, detection points, box visualization
+    :param text_threshold: text confidence threshold
+    :param link_threshold: link confidence threshold
+    :param low_text: text low-bound score
+    :param long_size: desired longest image size for inference
+    :param show_time: show processing time
+    :param crop_type: crop regions by detected boxes or polys ("poly" or "box")
+    :return:
+        {
+        "masks": lists of predicted masks 2d as bool array,
+        "boxes": list of coords of points of predicted boxes,
+        "boxes_as_ratios": list of coords of points of predicted boxes as ratios of image size,
+        "polys_as_ratios": list of coords of points of predicted polys as ratios of image size,
+        "heatmaps": visualization of the detected characters/links,
+        "text_crop_paths": list of paths of the exported text boxes/polys,
+        "times": elapsed times of the sub modules, in seconds
+        }
+    :returns:
+        prediction_result
     """
     # load craft model
-    craft_net = predict(image=image, refiner=refiner, cuda=cuda)
+    craft_net = craft_detector(image=image, refiner=refiner, cuda=cuda)
 
     prediction_result = craft_net.detect_text(image=image,
                                               output_dir=output_dir,

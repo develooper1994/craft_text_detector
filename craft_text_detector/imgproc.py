@@ -1,14 +1,14 @@
-"""
-Copyright (c) 2019-present NAVER Corp.
-MIT License
-"""
-
 # -*- coding: utf-8 -*-
 import numpy as np
 import cv2
 
 
 def read_image(img_file):
+    """
+    Read image in numpy
+    :param img_file: Input image
+    :return: input ready image for numpy network (model)
+    """
     img = cv2.imread(img_file)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     # following two cases are not explained in the original repo
@@ -20,9 +20,18 @@ def read_image(img_file):
     return img
 
 
-def normalizeMeanVariance(
+def normalize_mean_variance(
     in_img, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)
 ):
+    """
+    Normalize mean and variance
+    :param in_img: Input image
+    :param mean: mean values
+        Default: (0.485, 0.456, 0.406)
+    :param variance: Variance values
+        Default: (0.229, 0.224, 0.225)
+    :return: normalized image
+    """
     # should be RGB order
     img = in_img.copy().astype(np.float32)
 
@@ -36,9 +45,18 @@ def normalizeMeanVariance(
     return img
 
 
-def denormalizeMeanVariance(
+def denormalize_mean_variance(
     in_img, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)
 ):
+    """
+    Clip mean and variance
+    :param in_img: Input image
+    :param mean: mean values
+        Default: (0.485, 0.456, 0.406)
+    :param variance: Variance values
+        Default: (0.229, 0.224, 0.225)
+    :return: normalized image
+    """
     # should be RGB order
     img = in_img.copy()
     img *= variance
@@ -48,11 +66,17 @@ def denormalizeMeanVariance(
     return img
 
 
-def resize_aspect_ratio(img, long_size, interpolation):
+def resize_aspect_ratio(img, target_size, interpolation=cv2.INTER_CUBIC):
+    """
+    Resize according to aspect radio.
+    :param img: Input image
+    :param target_size: target size of image
+    :param interpolation: Interpolation type in opencv format
+        Default: cv2.INTER_CUBIC
+    :return: (Resized image, target image ratio, heatmap size)
+        (img_resized, target_ratio, size_heatmap)
+    """
     height, width, channel = img.shape
-
-    # set target image size
-    target_size = long_size
 
     ratio = target_size / max(height, width)
 
@@ -75,6 +99,11 @@ def resize_aspect_ratio(img, long_size, interpolation):
 
 
 def cvt2HeatmapImg(img):
+    """
+    Generates heatmap in numpy
+    :param img: Input image
+    :return: heatmap in numpy
+    """
     img = (np.clip(img, 0, 1) * 255).astype(np.uint8)
     img = cv2.applyColorMap(img, cv2.COLORMAP_JET)
     return img

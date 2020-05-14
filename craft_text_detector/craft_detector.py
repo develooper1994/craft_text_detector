@@ -16,7 +16,7 @@ from craft_text_detector import imgproc
 from craft_text_detector.models.craftnet import CRAFT
 from craft_text_detector.models.refinenet import RefineNet
 # my google drive
-from craft_text_detector.predict_util import copyStateDict, get_weight_path
+from craft_text_detector.craft_detector_util import copyStateDict, get_weight_path
 
 # Original
 # CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
@@ -48,8 +48,6 @@ def net_to_cuda(net, weight_path, cuda: bool = False):
             copyStateDict(torch.load(weight_path, map_location="cpu"))
         )
     net.eval()
-    # prediction_object.cuda = cuda  # To simulate behaviour.
-    # net = prediction_object.net_to_cuda(net, weight_path)
     return net
 
 
@@ -88,7 +86,7 @@ def get_prediction(image, craft_net,
                    text_threshold: float = 0.7,
                    link_threshold: float = 0.4,
                    low_text: float = 0.4,
-                   long_size: int = 1280,
+                   target_size: int = 1280,
                    cuda: bool = False,
                    poly: bool = True,
                    show_time: bool = False):
@@ -103,7 +101,7 @@ def get_prediction(image, craft_net,
         low_text: text low-bound score
         cuda: Use cuda for inference
         canvas_size: image size for inference
-        long_size: desired longest image size for inference
+        target_size: desired longest image size for inference
         poly: enable polygon type
         show_time: show processing time
     Output:
@@ -118,14 +116,14 @@ def get_prediction(image, craft_net,
 
     # resize
     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        image, long_size, interpolation=cv2.INTER_CUBIC  # old: cv2.INTER_LINEAR
+        image, target_size, interpolation=cv2.INTER_CUBIC  # old: cv2.INTER_LINEAR
     )
     ratio_h = ratio_w = 1 / target_ratio
     resize_time = time.time() - t0
     t0 = time.time()
 
     # preprocessing
-    x = imgproc.normalizeMeanVariance(img_resized)
+    x = imgproc.normalize_mean_variance(img_resized)
     x = torch.from_numpy(x).permute(2, 0, 1)  # [h, w, c] to [c, h, w]
     x = Variable(x.unsqueeze(0))  # [c, h, w] to [b, c, h, w]
     if cuda:
@@ -156,13 +154,13 @@ def get_prediction(image, craft_net,
     t0 = time.time()
 
     # Post-processing
-    boxes, polys = craft_utils.getDetBoxes(
+    boxes, polys = craft_utils.get_detection_boxes(
         score_text, score_link, text_threshold, link_threshold, low_text, poly
     )
 
     # coordinate adjustment
-    boxes = craft_utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
-    polys = craft_utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
+    boxes = craft_utils.adjust_result_coordinates(boxes, ratio_w, ratio_h)
+    polys = craft_utils.adjust_result_coordinates(polys, ratio_w, ratio_h)
     for k in range(len(polys)):
         if polys[k] is None:
             polys[k] = boxes[k]
@@ -221,19 +219,32 @@ def get_prediction(image, craft_net,
     #                                         text_threshold=text_threshold,
     #                                         link_threshold=link_threshold,
     #                                         low_text=low_text,
-    #                                         long_size=long_size,
+    #                                         target_size=target_size,
     #                                         poly=poly,
     #                                         show_time=show_time)
 
 
 # !!! New oops way.
-class predict:
+class craft_detector:
+    """
+    Craft(Character Region Awareness for Text Detection) implementation
+    """
     def __init__(self, image=None,
                  refiner=True,
                  craft_model_path=None,
                  refinenet_model_path=None,
                  cuda: bool = False,
                  benchmark: bool = False):
+        """
+        Configures class initializer.
+        :param image: Input image
+        :param refiner: refiner switch
+        :param craft_model_path: craft network(model) path with name
+        :param refinenet_model_path: refiner network(model) path with name
+        :param cuda: cuda switch
+        :param benchmark: cudnn benchmark mode switch
+        :return: None
+        """
         self.reload(image=image,
                     refiner=refiner,
                     craft_model_path=craft_model_path,
@@ -250,6 +261,16 @@ class predict:
                refinenet_model_path=None,
                cuda: bool = False,
                benchmark: bool = False):
+        """
+        Configures class initializer. Sometimes the class needs to be reloaded (configured) with new parameters
+        :param image: Input image
+        :param refiner: refiner switch
+        :param craft_model_path: craft network(model) path with name
+        :param refinenet_model_path: refiner network(model) path with name
+        :param cuda: cuda switch
+        :param benchmark: cudnn benchmark mode switch
+        :return: None
+        """
         # load craft input image
         self.__set_image(image)
         # load craft net
@@ -276,18 +297,31 @@ class predict:
         self.__set_refiner(refiner)
 
     def __set_image(self, image):
+        """
+        Configure input image
+        :param image: input image
+        :return: None
+        """
         self.image = image
         if isinstance(image, str):
             # consider image is image
             self.image = read_image(image)
 
     def __set_device(self, cuda: bool = False, benchmark: bool = False):
+        """
+        Detects device(CPU/GPU) and configures device that network(model) running on.
+        :param cuda: cuda configuration swtich.
+            Default: False
+        :param benchmark: cudnn benchmark mode switch.
+            Default: False
+        :return: None
+        """
         self.cuda = cuda
         self.benchmark = benchmark
         self.is_device = torch.cuda.is_available()
         # self.device = torch.device('cuda' if self.is_device and self.cuda else 'cpu')
         if self.cuda and self.is_device:
-            assert self.is_device, "!!!CUDA is not available!!!"
+            assert self.is_device, "!!!CUDA is not available!!!"  # Double check ;)
             self.device = torch.device('cuda')
             cudnn.enabled = True
             cudnn.benchmark = self.benchmark
@@ -295,6 +329,14 @@ class predict:
             self.device = torch.device('cpu')
 
     def __set_refiner(self, refiner: bool = True):
+        """
+        Configure refiner mode.
+        True -> load refine_net
+        False -> don't load refine_net
+        :param refiner: mode swtich
+        :type refiner: bool
+        :return: None
+        """
         if refiner:
             self.refine_net = self.__load_refinenet_model(self.refinenet_model_path)
         else:
@@ -304,30 +346,39 @@ class predict:
                        text_threshold: float = 0.7,
                        link_threshold: float = 0.4,
                        low_text: float = 0.4,
-                       long_size: int = 1280,
+                       target_size: int = 1280,
                        poly: bool = True,
                        show_time: bool = False):
         """
-        Arguments:
-            image: image to be processed
-            output_dir: path to the results to be exported
-            craft_net: craft net model
-            refine_net: refine net model
-            text_threshold: text confidence threshold
-            link_threshold: link confidence threshold
-            low_text: text low-bound score
-            cuda: Use cuda for inference
-            canvas_size: image size for inference
-            long_size: desired longest image size for inference
-            poly: enable polygon type
-            show_time: show processing time
-        Output:
-            {"masks": lists of predicted masks 2d as bool array,
-             "boxes": list of coords of points of predicted boxes,
-             "boxes_as_ratios": list of coords of points of predicted boxes as ratios of image size,
-             "polys_as_ratios": list of coords of points of predicted polys as ratios of image size,
-             "heatmaps": visualizations of the detected characters/links,
-             "times": elapsed times of the sub modules, in seconds}
+        Predicts bounding boxes where the text. The main function that gives bounding boxes.
+        :param image: image to be processed
+        :param text_threshold: text confidence threshold
+        :param link_threshold: link confidence threshold
+        :param low_text: text low-bound score
+        :param target_size: desired longest image size for inference
+        :param poly: enable polygon type
+        :param show_time: show processing time
+        :return:
+            {
+            "masks": lists of predicted masks 2d as bool array,
+            "boxes": list of coords of points of predicted boxes,
+            "boxes_as_ratios": list of coords of points of predicted boxes as ratios of image size,
+            "polys_as_ratios": list of coords of points of predicted polys as ratios of image size,
+            "heatmaps": visualizations of the detected characters/links,
+            "times": elapsed times of the sub modules, in seconds
+            }
+        :returns:
+            {
+            "boxes": boxes,
+            "boxes_as_ratios": boxes_as_ratio,
+            "polys": polys,
+            "polys_as_ratios": polys_as_ratio,
+            "heatmaps": {
+                "text_score_heatmap": text_score_heatmap,
+                "link_score_heatmap": link_score_heatmap,
+            },
+            "times": times,
+        }
         """
         if image is None:
             image = self.image
@@ -335,14 +386,14 @@ class predict:
 
         # resize
         img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-            image, long_size, interpolation=cv2.INTER_CUBIC  # old: cv2.INTER_LINEAR
+            image, target_size, interpolation=cv2.INTER_CUBIC  # old: cv2.INTER_LINEAR
         )
         ratio_h = ratio_w = 1 / target_ratio
         resize_time = time.time() - t0
         t0 = time.time()
 
         # preprocessing
-        x = imgproc.normalizeMeanVariance(img_resized)
+        x = imgproc.normalize_mean_variance(img_resized)
         x = torch.from_numpy(x).permute(2, 0, 1)  # [h, w, c] to [c, h, w]
         x = x.unsqueeze(0)  # [c, h, w] to [b, c, h, w]
         x = x.to(self.device)
@@ -368,13 +419,13 @@ class predict:
         t0 = time.time()
 
         # Post-processing
-        boxes, polys = craft_utils.getDetBoxes(
+        boxes, polys = craft_utils.get_detection_boxes(
             score_text, score_link, text_threshold, link_threshold, low_text, poly
         )
 
         # coordinate adjustment
-        boxes = craft_utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
-        polys = craft_utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
+        boxes = craft_utils.adjust_result_coordinates(boxes, ratio_w, ratio_h)
+        polys = craft_utils.adjust_result_coordinates(polys, ratio_w, ratio_h)
         for k in range(len(polys)):
             if polys[k] is None:
                 polys[k] = boxes[k]
@@ -439,27 +490,29 @@ class predict:
                     show_time=False,
                     crop_type="poly"):
         """
-        Arguments:
-            image: path to the image to be processed
-            output_dir: path to the results to be exported
-            rectify: rectify detected polygon by affine transform
-            export_extra: export heatmap, detection points, box visualization
-            text_threshold: text confidence threshold
-            link_threshold: link confidence threshold
-            low_text: text low-bound score
-            cuda: Use cuda for inference
-            long_size: desired longest image size for inference
-            show_time: show processing time
-            refiner: enable link refiner
-            crop_type: crop regions by detected boxes or polys ("poly" or "box")
-        Output:
-            {"masks": lists of predicted masks 2d as bool array,
-             "boxes": list of coords of points of predicted boxes,
-             "boxes_as_ratios": list of coords of points of predicted boxes as ratios of image size,
-             "polys_as_ratios": list of coords of points of predicted polys as ratios of image size,
-             "heatmaps": visualization of the detected characters/links,
-             "text_crop_paths": list of paths of the exported text boxes/polys,
-             "times": elapsed times of the sub modules, in seconds}
+        Detects text but has some extra functionalities.
+        :param image: path to the image to be processed
+        :param output_dir: path to the results to be exported
+        :param rectify: rectify detected polygon by affine transform
+        :param export_extra: export heatmap, detection points, box visualization
+        :param text_threshold: text confidence threshold
+        :param link_threshold: link confidence threshold
+        :param low_text: text low-bound score
+        :param long_size: desired longest image size for inference
+        :param show_time: show processing time
+        :param crop_type: crop regions by detected boxes or polys ("poly" or "box")
+        :return:
+            {
+            "masks": lists of predicted masks 2d as bool array,
+            "boxes": list of coords of points of predicted boxes,
+            "boxes_as_ratios": list of coords of points of predicted boxes as ratios of image size,
+            "polys_as_ratios": list of coords of points of predicted polys as ratios of image size,
+            "heatmaps": visualization of the detected characters/links,
+            "text_crop_paths": list of paths of the exported text boxes/polys,
+            "times": elapsed times of the sub modules, in seconds
+            }
+        :returns:
+            prediction_result
         """
 
         # load image
@@ -474,7 +527,7 @@ class predict:
                                                 text_threshold=text_threshold,
                                                 link_threshold=link_threshold,
                                                 low_text=low_text,
-                                                long_size=long_size,
+                                                target_size=long_size,
                                                 show_time=show_time)
 
         # arange regions
@@ -511,7 +564,18 @@ class predict:
         # return prediction results
         return prediction_result
 
-    def __net_to_cuda(self, net, weight_path):
+    def __load_state_dict(self, net, weight_path):
+        """
+        1) Loads weights and biases.
+        2) Deserialize them.
+        3) Transport to cuda
+        4) Make it pytorch "dataparallel"
+        5) Turn it into evaluation mode.
+        6) Return it.
+        :param net: Artificial Neural network(model) that makes main job
+        :param weight_path: Serialized pth file path with name
+        :return: loaded network
+        """
         net.load_state_dict(copyStateDict(torch.load(weight_path)))
 
         net = net.to(self.device)
@@ -520,23 +584,35 @@ class predict:
         return net
 
     def __load_craftnet_model(self, craft_model_path=None):
+        """
+        Loads craftnet network(model)
+        :param craft_model_path: Serialized craftnet network(model) file path with name
+        :return: loaded network
+        """
         # get craft net path
         weight_path = get_weight_path(craft_model_path,
                                       self.CRAFT_GDRIVE_URL,
                                       self.craft_model_name)
 
         # arange device
-        craft_net = self.__net_to_cuda(self.craft_net, weight_path)
+        craft_net = self.__load_state_dict(self.craft_net, weight_path)
         return craft_net
 
     def __load_refinenet_model(self, refinenet_model_path=None):
+        """
+        Loads refinenet network(model)
+        :param refinenet_model_path: Serialized refinenet network(model) file path with name
+        Refiner network eliminates low probability detections.
+            Default: None
+        :return: loaded network
+        """
         # get refine net path
         weight_path = get_weight_path(refinenet_model_path,
                                       self.REFINENET_GDRIVE_URL,
                                       "craft_refiner_CTW1500.pth")
 
         # arange device
-        refine_net = self.__net_to_cuda(self.refine_net, weight_path)
+        refine_net = self.__load_state_dict(self.refine_net, weight_path)
         return refine_net
 
 
@@ -548,18 +624,20 @@ if __name__ == "__main__":
 
 
     def test_oops(image_path, output_dir):
+        show_time = False
         # read image
         image = read_image(image_path)
-        # create predict class
-        pred = predict(image=image, refiner=False, cuda=True)
-        prediction_result = pred.detect_text(output_dir=None,
+        # create craft_detector class
+        pred = craft_detector(image=image, refiner=False, cuda=True)
+        prediction_result = pred.detect_text(image=image_path,
+                                             output_dir=output_dir,
                                              rectify=True,
-                                             export_extra=True,
+                                             export_extra=False,
                                              text_threshold=0.7,
                                              link_threshold=0.4,
                                              low_text=0.4,
-                                             long_size=1280,
-                                             show_time=False,
+                                             long_size=720,
+                                             show_time=show_time,
                                              crop_type="poly")
         print(len(prediction_result["boxes"]))  # 51
         print(len(prediction_result["boxes"][0]))  # 4
@@ -570,7 +648,7 @@ if __name__ == "__main__":
                                  text_threshold=0.7,
                                  link_threshold=0.4,
                                  low_text=0.4,
-                                 long_size=1280,
+                                 target_size=1280,
                                  show_time=True)
         # export detected text regions
         exported_file_paths = export_detected_regions(
@@ -590,4 +668,4 @@ if __name__ == "__main__":
         )
 
 
-    test_oops(image_path, output_dir)  # 0.418/0.109
+    test_oops(image_path, output_dir)  # Best time: 0.252/0.171

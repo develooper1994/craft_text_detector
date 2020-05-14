@@ -8,10 +8,15 @@ import numpy as np
 
 def download(url: str, save_path: str):
     """
-    Downloads file from gdrive, shows progress.
-    Example inputs:
-        url: 'ftp://smartengines.com/midv-500/dataset/01_alb_id.zip'
-        save_path: 'data/file.zip'
+    Downloads file from my gdrive, shows progress.
+        Example inputs:
+            url: 'ftp://smartengines.com/midv-500/dataset/01_alb_id.zip'
+            save_path: 'data/file.zip'
+    :param url: Download url
+    :type url: str
+    :param save_path: saving directory
+    :type save_path: str
+    :return: None
     """
 
     # create save_dir if not present
@@ -23,17 +28,28 @@ def download(url: str, save_path: str):
 def create_dir(_dir):
     """
     Creates given directory if it is not present.
+    :param _dir: Directory
     """
     if not os.path.exists(_dir):
         os.makedirs(_dir)
 
 
 def get_files(img_dir):
+    """
+    Get all image files
+    :param img_dir: Input image directory
+    :return: (images files, masks files, xml metadata files)
+    """
     imgs, masks, xmls = list_files(img_dir)
     return imgs, masks, xmls
 
 
 def list_files(in_path):
+    """
+    Get and list all images in disk
+    :param in_path: Input path that include images
+    :return: (images files, masks files, xml metadata files)
+    """
     img_files = []
     mask_files = []
     gt_files = []
@@ -62,6 +78,13 @@ def list_files(in_path):
 
 
 def rectify_poly(img, poly):
+    """
+    Scene is not always looks directly to the writing. So need to reduce variation of looking angle and size.
+    Rectifies image
+    :param img: Input image
+    :param poly: Predicted bounding boxes in poligonal shape
+    :return: Rectified image
+    """
     # Use Affine transform
     n = int(len(poly) / 2) - 1
     width = 0
@@ -119,6 +142,12 @@ def rectify_poly(img, poly):
 
 
 def crop_poly(image, poly):
+    """
+    Crops poligon from image
+    :param image: Input image
+    :param poly: Predicted bounding boxes in poligonal shape
+    :return: croped image
+    """
     # points should have 1*x*2  shape
     if len(poly.shape) == 2:
         poly = np.array([np.array(poly).astype(np.int32)])

@@ -1,18 +1,15 @@
-"""
-Copyright (c) 2019-present NAVER Corp.
-MIT License
-"""
-
 # -*- coding: utf-8 -*-
 import numpy as np
 import cv2
 import math
 
 """ auxilary functions """
+
+
 # unwarp corodinates
 
 
-def warpCoord(Minv, pt):
+def warp_coord(Minv, pt):
     out = np.matmul(Minv, (pt[0], pt[1], 1))
     return np.array([out[0] / out[2], out[1] / out[2]])
 
@@ -20,7 +17,7 @@ def warpCoord(Minv, pt):
 """ end of auxilary functions """
 
 
-def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text):
+def get_detection_boxes_core(textmap, linkmap, text_threshold, link_threshold, low_text):
     # prepare data
     linkmap = linkmap.copy()
     textmap = textmap.copy()
@@ -95,7 +92,7 @@ def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text)
     return det, labels, mapper
 
 
-def getPoly_core(boxes, labels, mapper, linkmap):
+def get_poly_core(boxes, labels, mapper):
     # configs
     num_cp = 5
     max_len_ratio = 0.7
@@ -217,10 +214,10 @@ def getPoly_core(boxes, labels, mapper, linkmap):
         # get edge points to cover character heatmaps
         isSppFound, isEppFound = False, False
         grad_s = (pp[1][1] - pp[0][1]) / (pp[1][0] - pp[0][0]) + (
-            pp[2][1] - pp[1][1]
+                pp[2][1] - pp[1][1]
         ) / (pp[2][0] - pp[1][0])
         grad_e = (pp[-2][1] - pp[-1][1]) / (pp[-2][0] - pp[-1][0]) + (
-            pp[-3][1] - pp[-2][1]
+                pp[-3][1] - pp[-2][1]
         ) / (pp[-3][0] - pp[-2][0])
         for r in np.arange(0.5, max_r, step_r):
             dx = 2 * half_char_h * r
@@ -236,8 +233,8 @@ def getPoly_core(boxes, labels, mapper, linkmap):
                     thickness=1,
                 )
                 if (
-                    np.sum(np.logical_and(word_label, line_img)) == 0
-                    or r + 2 * step_r >= max_r
+                        np.sum(np.logical_and(word_label, line_img)) == 0
+                        or r + 2 * step_r >= max_r
                 ):
                     spp = p
                     isSppFound = True
@@ -253,8 +250,8 @@ def getPoly_core(boxes, labels, mapper, linkmap):
                     thickness=1,
                 )
                 if (
-                    np.sum(np.logical_and(word_label, line_img)) == 0
-                    or r + 2 * step_r >= max_r
+                        np.sum(np.logical_and(word_label, line_img)) == 0
+                        or r + 2 * step_r >= max_r
                 ):
                     epp = p
                     isEppFound = True
@@ -267,15 +264,14 @@ def getPoly_core(boxes, labels, mapper, linkmap):
             continue
 
         # make final polygon
-        poly = []
-        poly.append(warpCoord(Minv, (spp[0], spp[1])))
+        poly = [warp_coord(Minv, (spp[0], spp[1]))]
         for p in new_pp:
-            poly.append(warpCoord(Minv, (p[0], p[1])))
-        poly.append(warpCoord(Minv, (epp[0], epp[1])))
-        poly.append(warpCoord(Minv, (epp[2], epp[3])))
+            poly.append(warp_coord(Minv, (p[0], p[1])))
+        poly.append(warp_coord(Minv, (epp[0], epp[1])))
+        poly.append(warp_coord(Minv, (epp[2], epp[3])))
         for p in reversed(new_pp):
-            poly.append(warpCoord(Minv, (p[2], p[3])))
-        poly.append(warpCoord(Minv, (spp[2], spp[3])))
+            poly.append(warp_coord(Minv, (p[2], p[3])))
+        poly.append(warp_coord(Minv, (spp[2], spp[3])))
 
         # add to final result
         polys.append(np.array(poly))
@@ -283,20 +279,20 @@ def getPoly_core(boxes, labels, mapper, linkmap):
     return polys
 
 
-def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly=False):
-    boxes, labels, mapper = getDetBoxes_core(
+def get_detection_boxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly=False):
+    boxes, labels, mapper = get_detection_boxes_core(
         textmap, linkmap, text_threshold, link_threshold, low_text
     )
 
     if poly:
-        polys = getPoly_core(boxes, labels, mapper, linkmap)
+        polys = get_poly_core(boxes, labels, mapper)
     else:
         polys = [None] * len(boxes)
 
     return boxes, polys
 
 
-def adjustResultCoordinates(polys, ratio_w, ratio_h, ratio_net=2):
+def adjust_result_coordinates(polys, ratio_w, ratio_h, ratio_net=2):
     if len(polys) > 0:
         polys = np.array(polys)
         for k in range(len(polys)):
