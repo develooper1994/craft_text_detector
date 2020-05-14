@@ -18,13 +18,17 @@ and affinity scores.
 ## Getting started
 ### Install dependencies
 #### Requirements
-- torch>=0.4.1
-- torchvision>=0.2.1
-- opencv-python>=3.4.8.29
-- scipy>=1.3.2
-- gdown>=3.10.1
-- setuptools~=46.2.0
-- numpy~=1.18.1
+    torch>=0.4.1
+    torchvision>=0.2.1
+    opencv-python>=3.4.8.29
+    scipy>=1.3.2
+    gdown>=3.10.1
+    setuptools~=46.2.0
+    numpy~=1.18.1
+    argparse~=1.4.0
+    pillow~=7.0.0
+    scikit-image~=0.17.1
+    h5py~=2.10.0
 - check requiremtns.txt
 ```
 pip install -r requirements.txt
@@ -39,9 +43,6 @@ or
 ```download and install
 python setup.py install
 ```
-
-### Training
-COMING!!!
 
 ### Basic Usage
 
@@ -110,9 +111,9 @@ craft.export_extra_results(
  
  *Model name* | *Used datasets* | *Languages* | *Purpose* | *Model Link Baidu* | *Model Link Google Drive* |
  | :--- | :--- | :--- | :--- | :--- | :--- |
-General | SynthText, IC13, IC17 | Eng + MLT | For general purpose |  [Syndata+IC13+IC17 for baidu drive](https://pan.baidu.com/s/1PTTzbM9XG0pNe5i-uL6Aag) |      [Syndata+IC13+IC17 for google drive](https://drive.google.com/open?id=1CV3Ao4zuDikOkuHHNCw0_YRVWq7YsPBQ)
-IC15 | SynthText, IC15 | Eng | For IC15 only | [Syndata+IC15 for baidu drive](https://pan.baidu.com/s/19lJRM6YWZXVkZ_aytsYSiQ) |     [Syndata+IC15 for google drive](https://drive.google.com/open?id=1zQYaWF9_9Jsu5xjA5tD0X9N6Ug0lnbtm)
-SynthText | SynthText | - | For SynthText only | [Syndata for baidu drive](https://pan.baidu.com/s/1MaznjE79JNS9Ld48ZtRefg) |     [Syndata for google drive](https://drive.google.com/open?id=1pzPBZ5cYDCHPVRYbWTgIjhntA_LLSLyS)                                                                                                    
+General | SynthText, IC13, IC17 | Eng + MLT | For general purpose |  [SynthText+IC13+IC17 for baidu drive](https://pan.baidu.com/s/1PTTzbM9XG0pNe5i-uL6Aag) |      [SynthText+IC13+IC17 for google drive](https://drive.google.com/open?id=1CV3Ao4zuDikOkuHHNCw0_YRVWq7YsPBQ)
+IC15 | SynthText, IC15 | Eng | For IC15 only | [SynthText+IC15 for baidu drive](https://pan.baidu.com/s/19lJRM6YWZXVkZ_aytsYSiQ) |     [SynthText+IC15 for google drive](https://drive.google.com/open?id=1zQYaWF9_9Jsu5xjA5tD0X9N6Ug0lnbtm)
+SynthText | SynthText | - | For SynthText only | [SynthText for baidu drive](https://pan.baidu.com/s/1MaznjE79JNS9Ld48ZtRefg) |     [SynthText for google drive](https://drive.google.com/open?id=1pzPBZ5cYDCHPVRYbWTgIjhntA_LLSLyS)                                                                                                    
 LinkRefiner | CTW1500 | - | Used with the General Model |  [LinkRefiner for baidu drive]() |     [LinkRefiner for google drive](https://drive.google.com/open?id=1ZDe0WRwlxLRkwofQt8C18ZTF-oA3vbfs)
 
 * Run with pretrained model
@@ -135,6 +136,16 @@ The result image and socre maps will be saved to `./result` by default.
 * `--test_folder`: folder path to input images
 * `--refine`: use link refiner for sentense-level dataset
 * `--refiner_model`: pretrained refiner model
+
+### Training
+COMING!!! <br>
+`Note: When you train the IC15-Data or MLT-Data, please see the annotation in data_loader.py line 92 and line 108-112.`
+
+
+
+
+
+
 
 ## Links
 - WebDemo : https://demo.ocr.clova.ai/
