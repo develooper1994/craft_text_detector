@@ -1,3 +1,4 @@
+import os
 import time
 
 import cv2
@@ -229,6 +230,7 @@ class craft_detector:
     """
     Craft(Character Region Awareness for Text Detection) implementation
     """
+
     def __init__(self, image=None,
                  refiner=True,
                  craft_model_path=None,
@@ -624,11 +626,16 @@ if __name__ == "__main__":
 
 
     def test_oops(image_path, output_dir):
+        craft_model_path = "../craft_mlt_25k.pth"
+        refinenet_model_path = "../craft_refiner_CTW1500.pth"
         show_time = False
         # read image
         image = read_image(image_path)
         # create craft_detector class
-        pred = craft_detector(image=image, refiner=False, cuda=True)
+        pred = craft_detector(image=image,
+                              craft_model_path=craft_model_path,
+                              refinenet_model_path=refinenet_model_path,
+                              refiner=True, cuda=True)
         prediction_result = pred.detect_text(image=image_path,
                                              output_dir=output_dir,
                                              rectify=True,
@@ -668,4 +675,6 @@ if __name__ == "__main__":
         )
 
 
-    test_oops(image_path, output_dir)  # Best time: 0.252/0.171
+    # Best time without refiner: 0.252/0.171
+    # Best time with refiner: 0.408/0.090
+    test_oops(image_path, output_dir)

@@ -33,7 +33,7 @@ def str2bool(v):
     return v.lower() in ("yes", "y", "true", "t", "1")
 
 
-def get_weight_path(model_path, model_url, net_name: str):
+def get_weight_path(model_path=None, model_url=None, net_name: str = "/craft_mlt_25k.pth"):
     """
     Downloads weights and biases if model_path is empty.
         Default download path:
@@ -48,16 +48,18 @@ def get_weight_path(model_path, model_url, net_name: str):
             weight_path = "$HOME/.craft_text_detector/weights"
     """
     home_path = str(Path.home())
-    weight_path = os.path.join(
-        home_path, ".craft_text_detector", "weights", net_name
-    )
-    # check if weights are already downloaded, if not download
+    if model_path is None:
+        weight_path = os.path.join(
+            home_path, ".craft_text_detector", "weights", net_name
+        )
+    else:
+        weight_path = model_path
+
+    # check if weights are already downloaded. if not, download
     if os.path.isfile(weight_path) is not True:
+        # download to given weight_path
         print("Craft text detector weight will be downloaded to {}".format(weight_path))
-        if model_path is None:
-            url = model_url
-            file_utils.download(url=url, save_path=weight_path)
-        else:
-            # TODO! give path to load craft_model
-            weight_path = model_path
+        file_utils.download(url=model_url, save_path=weight_path)
+    else:
+        weight_path = model_path
     return weight_path
