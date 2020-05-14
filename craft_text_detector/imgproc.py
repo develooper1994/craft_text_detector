@@ -87,7 +87,7 @@ def resize_aspect_ratio(img, square_size, interpolation=cv2.INTER_CUBIC, mag_rat
     if target_size > square_size:
         target_size = square_size
 
-    ratio = square_size / max(height, width)
+    ratio = target_size / max(height, width)
 
     target_h, target_w = int(height * ratio), int(width * ratio)
     proc = cv2.resize(img, (target_w, target_h), interpolation=interpolation)

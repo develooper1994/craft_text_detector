@@ -26,7 +26,7 @@ class TestCraftTextDetector(unittest.TestCase):
 
     def test_load_refinenet_model(self):
         refine_net = pred.refine_net
-        self.assertTrue(refine_net is None)
+        self.assertTrue(refine_net)
 
     def test_get_prediction(self):
         # load image
@@ -36,8 +36,11 @@ class TestCraftTextDetector(unittest.TestCase):
         text_threshold = 0.9
         link_threshold = 0.2
         low_text = 0.2
-        prediction_result = pred.get_prediction(image=image, text_threshold=text_threshold,
-                                                link_threshold=link_threshold, low_text=low_text, square_size=720,
+        prediction_result = pred.get_prediction(image=image,
+                                                text_threshold=text_threshold,
+                                                link_threshold=link_threshold,
+                                                low_text=low_text,
+                                                square_size=720,
                                                 show_time=show_time)
 
         # !!! get_prediction.py -> get_prediction(...)
@@ -49,7 +52,7 @@ class TestCraftTextDetector(unittest.TestCase):
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
         #         image, square_size, interpolation=cv2.INTER_CUBIC
         #     )
-        self.assertEqual(37, len(prediction_result["boxes"]))
+        self.assertEqual(15, len(prediction_result["boxes"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 15
         self.assertEqual(4, len(prediction_result["boxes"][0]))
         self.assertEqual(2, len(prediction_result["boxes"][0][0]))
         self.assertEqual(111, int(prediction_result["boxes"][0][0][0]))
@@ -62,7 +65,7 @@ class TestCraftTextDetector(unittest.TestCase):
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
         #         image, square_size, interpolation=cv2.INTER_CUBIC
         #     )
-        self.assertEqual(37, len(prediction_result["polys"]))
+        self.assertEqual(15, len(prediction_result["polys"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 15
         self.assertEqual((240, 368, 3), prediction_result["heatmaps"]["text_score_heatmap"].shape)
 
     def test_detect_text(self):

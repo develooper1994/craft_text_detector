@@ -26,7 +26,11 @@ import craft_text_detector
 from craft_text_detector.craft_detector_util import str2bool
 
 parser = argparse.ArgumentParser(description='CRAFT Text Detection')
+parser.add_argument('--test_folder', default='/data/', type=str, help='folder path to input images')
 parser.add_argument('--trained_model', default='../craft_mlt_25k.pth', type=str, help='pretrained model')
+parser.add_argument('--refiner_model', default='../craft_refiner_CTW1500.pth', type=str,
+                    help='pretrained refiner model')
+parser.add_argument('--refine', default=False, action='store_true', help='enable link refiner')
 parser.add_argument('--text_threshold', default=0.7, type=float, help='text confidence threshold')
 parser.add_argument('--low_text', default=0.4, type=float, help='text low-bound score')
 parser.add_argument('--link_threshold', default=0.4, type=float, help='link confidence threshold')
@@ -35,38 +39,40 @@ parser.add_argument('--canvas_size', default=1280, type=int, help='image size fo
 parser.add_argument('--mag_ratio', default=1.5, type=float, help='image magnification ratio')
 parser.add_argument('--poly', default=False, action='store_true', help='enable polygon type')
 parser.add_argument('--show_time', default=False, action='store_true', help='show processing time')
-parser.add_argument('--test_folder', default='/data/', type=str, help='folder path to input images')
-parser.add_argument('--refine', default=False, action='store_true', help='enable link refiner')
-parser.add_argument('--refiner_model', default='../craft_refiner_CTW1500.pth', type=str,
-                    help='pretrained refiner model')
 
 args = parser.parse_args()
 
-""" For test images in a folder """
-image_list, _, _ = file_utils.get_files(args.test_folder)
-
-result_folder = './result/'
-if not os.path.isdir(result_folder):
-    os.mkdir(result_folder)
 
 
-def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, refine_net=None):
-    return boxes, polys, ret_score_text
-
-# TODO! complete test that will test on entire dataset.
+# TODO! complete test that will test on entire dataset. I don't have data for now.
 if __name__ == '__main__':
-    # load net
+
     test_folder = args.test_folder
-    output_dir = None
-    cuda = args.cuda  # False
-    show_time = args.show_time
-    refiner = args.refiner
-    poly = args.poly
+
+    """ For test images in a folder """
+    image_list, _, _ = file_utils.get_files(test_folder)
+
+    output_dir = './result/'
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
+
+    # load net
+    craft_model_path = args.trained_model
+
+    refine = args.refine
+    if refine:
+        refinenet_model_path = args.refiner_model
+    else:
+        refinenet_model_path = None
+    text_threshold = args.text_threshold
     low_text = args.low_text
     link_threshold = args.link_threshold
-    text_threshold = args.text_threshold
-    craft_model_path = args.trained_model
-    refinenet_model_path = args.refiner_model
+    cuda = args.cuda
+    square_size = args.canvas_size
+    mag_ratio = args.mag_ratio
+    poly = args.poly
+    show_time = args.show_time
+
     craft_net = craft_text_detector.craft_detector(craft_model_path=craft_model_path,
                                                    refinenet_model_path=refinenet_model_path,
                                                    cuda=cuda)  # initialize
@@ -87,17 +93,19 @@ if __name__ == '__main__':
         #                                      args.cuda, args.poly, refine_net)
 
         bboxes, polys, score_text = craft_net.get_prediction(image=image,
-                                                             text_threshold=0.7,
-                                                             link_threshold=0.4,
-                                                             low_text=0.4,
-                                                             square_size=1280,
-                                                             show_time=True)
+                                                             text_threshold=text_threshold,
+                                                             link_threshold=link_threshold,
+                                                             low_text=low_text,
+                                                             square_size=square_size,
+                                                             mag_ratio=mag_ratio,
+                                                             poly=poly,
+                                                             show_time=show_time)
 
         # save score text
         filename, file_ext = os.path.splitext(os.path.basename(image_path))
-        mask_file = result_folder + "/res_" + filename + '_mask.jpg'
+        mask_file = output_dir + "/res_" + filename + '_mask.jpg'
         cv2.imwrite(mask_file, score_text)
 
-        file_utils.export_extra_results(image_path, image[:, :, ::-1], polys, output_dir=result_folder)
+        file_utils.export_extra_results(image_path, image[:, :, ::-1], polys, output_dir=output_dir)
 
     print("elapsed time : {}s".format(time.time() - t))

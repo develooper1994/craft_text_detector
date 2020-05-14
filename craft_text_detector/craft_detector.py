@@ -271,7 +271,6 @@ class craft_detector:
         self.CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
         self.craft_model_name = "craft_mlt_25k.pth"
         self.craft_model_path = craft_model_path
-        print("self.craft_model_path: ", self.craft_model_path)
         self.craft_net = self.__load_craftnet_model(self.craft_model_path)
 
         self.REFINENET_GDRIVE_URL = "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
@@ -320,7 +319,8 @@ class craft_detector:
                        link_threshold: float = 0.4,
                        low_text: float = 0.4,
                        square_size: int = 1280,
-                       mag_ratio=1, poly: bool = True,
+                       mag_ratio=1,
+                       poly: bool = True,
                        show_time: bool = False):
         """
         Predicts bounding boxes where the text. The main function that gives bounding boxes.
@@ -647,5 +647,5 @@ if __name__ == "__main__":
 
 
     # Best time without refiner: 0.252/0.171
-    # Best time with refiner: 0.408/0.090
+    # Best time with refiner: 0.162/0.060. Wow!!!
     test_oops(image_path, output_dir)
