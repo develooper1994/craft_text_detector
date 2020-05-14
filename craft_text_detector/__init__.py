@@ -8,19 +8,14 @@ from craft_text_detector.imgproc import read_image
 
 from craft_text_detector.file_utils import export_detected_regions, export_extra_results
 
-from craft_text_detector.craft_detector import (
-    load_craftnet_model,
-    load_refinenet_model,
-    get_prediction,
-    craft_detector,
-)
+from craft_text_detector.craft_detector import craft_detector
 
 
 def detect_text(image, output_dir=None, rectify=True, export_extra=True,
                 text_threshold=0.7, link_threshold=0.4,
                 low_text=0.4, long_size=1280,
                 cuda=False, show_time=False,
-                refiner=True, crop_type="poly"):
+                crop_type="poly"):
     """
     Detects text but has some extra functionalities.
     :param image: path to the image to be processed
@@ -32,6 +27,7 @@ def detect_text(image, output_dir=None, rectify=True, export_extra=True,
     :param low_text: text low-bound score
     :param long_size: desired longest image size for inference
     :param show_time: show processing time
+    :param cuda: cuda switch
     :param crop_type: crop regions by detected boxes or polys ("poly" or "box")
     :return:
         {

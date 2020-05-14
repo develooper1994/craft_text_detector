@@ -1,3 +1,4 @@
+# !!! not tested !!!
 # -*- coding: utf-8 -*-
 import json
 import zipfile
@@ -41,8 +42,6 @@ parser.add_argument('--poly', default=False, action='store_true', help='enable p
 parser.add_argument('--show_time', default=False, action='store_true', help='show processing time')
 
 args = parser.parse_args()
-
-
 
 # TODO! complete test that will test on entire dataset. I don't have data for now.
 if __name__ == '__main__':
@@ -92,14 +91,27 @@ if __name__ == '__main__':
         # bboxes, polys, score_text = test_net(craft_net, image, args.text_threshold, args.link_threshold, args.low_text,
         #                                      args.cuda, args.poly, refine_net)
 
-        bboxes, polys, score_text = craft_net.get_prediction(image=image,
-                                                             text_threshold=text_threshold,
-                                                             link_threshold=link_threshold,
-                                                             low_text=low_text,
-                                                             square_size=square_size,
-                                                             mag_ratio=mag_ratio,
-                                                             poly=poly,
-                                                             show_time=show_time)
+        # return {
+        #     "boxes": boxes,
+        #     "boxes_as_ratios": boxes_as_ratio,
+        #     "polys": polys,
+        #     "polys_as_ratios": polys_as_ratio,
+        #     "heatmaps": {
+        #         "text_score_heatmap": text_score_heatmap,
+        #         "link_score_heatmap": link_score_heatmap,
+        #     },
+        #     "times": times,
+        # }
+
+        prediction = craft_net.get_prediction(image=image,
+                                              text_threshold=text_threshold,
+                                              link_threshold=link_threshold,
+                                              low_text=low_text,
+                                              square_size=square_size,
+                                              mag_ratio=mag_ratio,
+                                              poly=poly,
+                                              show_time=show_time)
+        bboxes, polys, score_text = prediction["boxes"], prediction["polys"], prediction["text_score_heatmap"]
 
         # save score text
         filename, file_ext = os.path.splitext(os.path.basename(image_path))

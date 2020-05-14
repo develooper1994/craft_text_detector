@@ -106,17 +106,18 @@ craft.export_extra_results(
 ```
 
 ### Test instruction using pretrained model
-- Download the trained models
+- Download the trained models from my Google Drive
  
- *Model name* | *Used datasets* | *Languages* | *Purpose* | *Model Link* |
- | :--- | :--- | :--- | :--- | :--- |
-General | SynthText, IC13, IC17 | Eng + MLT | For general purpose | [Click](https://drive.google.com/open?id=1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ)
-IC15 | SynthText, IC15 | Eng | For IC15 only | [Click](https://drive.google.com/open?id=1i2R7UIUqmkUtF0jv_3MXTqmQ_9wuAnLf)
-LinkRefiner | CTW1500 | - | Used with the General Model | [Click](https://drive.google.com/open?id=1XSaFwBkOaFOdtk4Ane3DFyJGPRw6v5bO)
+ *Model name* | *Used datasets* | *Languages* | *Purpose* | *Model Link Baidu* | *Model Link Google Drive* |
+ | :--- | :--- | :--- | :--- | :--- | :--- |
+General | SynthText, IC13, IC17 | Eng + MLT | For general purpose |  [Syndata+IC13+IC17 for baidu drive](https://pan.baidu.com/s/1PTTzbM9XG0pNe5i-uL6Aag) |      [Syndata+IC13+IC17 for google drive](https://drive.google.com/open?id=1CV3Ao4zuDikOkuHHNCw0_YRVWq7YsPBQ)
+IC15 | SynthText, IC15 | Eng | For IC15 only | [Syndata+IC15 for baidu drive](https://pan.baidu.com/s/19lJRM6YWZXVkZ_aytsYSiQ) |     [Syndata+IC15 for google drive](https://drive.google.com/open?id=1zQYaWF9_9Jsu5xjA5tD0X9N6Ug0lnbtm)
+SynthText | SynthText | - | For SynthText only | [Syndata for baidu drive](https://pan.baidu.com/s/1MaznjE79JNS9Ld48ZtRefg) |     [Syndata for google drive](https://drive.google.com/open?id=1pzPBZ5cYDCHPVRYbWTgIjhntA_LLSLyS)                                                                                                    
+LinkRefiner | CTW1500 | - | Used with the General Model |  [LinkRefiner for baidu drive]() |     [LinkRefiner for google drive](https://drive.google.com/open?id=1ZDe0WRwlxLRkwofQt8C18ZTF-oA3vbfs)
 
 * Run with pretrained model
 ``` (with python 3.7)
-python test.py --trained_model=[weightfile] --test_folder=[folder path to test images]
+python test_on_dataset.py --trained_model=[weightfile] --test_folder=[folder path to test images]
 ```
 
 The result image and socre maps will be saved to `./result` by default.
