@@ -66,19 +66,28 @@ def denormalize_mean_variance(
     return img
 
 
-def resize_aspect_ratio(img, target_size, interpolation=cv2.INTER_CUBIC):
+def resize_aspect_ratio(img, square_size, interpolation=cv2.INTER_CUBIC, mag_ratio=1):
     """
     Resize according to aspect radio.
     :param img: Input image
-    :param target_size: target size of image
+    :param square_size: target size of image
     :param interpolation: Interpolation type in opencv format
         Default: cv2.INTER_CUBIC
+    :param mag_ratio: image magnification ratio
+        Default: 1
     :return: (Resized image, target image ratio, heatmap size)
         (img_resized, target_ratio, size_heatmap)
     """
     height, width, channel = img.shape
 
-    ratio = target_size / max(height, width)
+    # magnify image size
+    target_size = mag_ratio * max(height, width)
+
+    # set original image size
+    if target_size > square_size:
+        target_size = square_size
+
+    ratio = square_size / max(height, width)
 
     target_h, target_w = int(height * ratio), int(width * ratio)
     proc = cv2.resize(img, (target_w, target_h), interpolation=interpolation)

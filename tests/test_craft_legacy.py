@@ -40,12 +40,12 @@ class TestCraftTextDetector(unittest.TestCase):
 
         # !!! get_prediction.py -> get_prediction(...)
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        #         image, target_size, interpolation=cv2.INTER_LINEAR
+        #         image, square_size, interpolation=cv2.INTER_LINEAR
         #     )
         # self.assertEqual(len(prediction_result["boxes"]), 35)
 
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        #         image, target_size, interpolation=cv2.INTER_CUBIC
+        #         image, square_size, interpolation=cv2.INTER_CUBIC
         #     )
         self.assertEqual(37, len(prediction_result["boxes"]))
         self.assertEqual(4, len(prediction_result["boxes"][0]))
@@ -53,12 +53,12 @@ class TestCraftTextDetector(unittest.TestCase):
         self.assertEqual(111, int(prediction_result["boxes"][0][0][0]))
         # !!! get_prediction.py -> get_prediction(...)
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        #         image, target_size, interpolation=cv2.INTER_LINEAR
+        #         image, square_size, interpolation=cv2.INTER_LINEAR
         #     )
         # self.assertEqual(len(prediction_result["polys"]), 35)
 
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        #         image, target_size, interpolation=cv2.INTER_CUBIC
+        #         image, square_size, interpolation=cv2.INTER_CUBIC
         #     )
         self.assertEqual(37, len(prediction_result["polys"]))
         self.assertEqual((240, 368, 3), prediction_result["heatmaps"]["text_score_heatmap"].shape)
@@ -70,12 +70,12 @@ class TestCraftTextDetector(unittest.TestCase):
                                                             refiner=False, crop_type="poly")
         # !!! get_prediction.py -> get_prediction(...)
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        #         image, target_size, interpolation=cv2.INTER_LINEAR
+        #         image, square_size, interpolation=cv2.INTER_LINEAR
         #     )
         # self.assertEqual(len(prediction_result["boxes"]), 52)
 
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        #         image, target_size, interpolation=cv2.INTER_CUBIC
+        #         image, square_size, interpolation=cv2.INTER_CUBIC
         #     )
         self.assertEqual(51, len(prediction_result["boxes"]))
         self.assertEqual(4, len(prediction_result["boxes"][0]))
@@ -94,12 +94,12 @@ class TestCraftTextDetector(unittest.TestCase):
                                                             refiner=False, crop_type="box")
         # !!! get_prediction.py -> get_prediction(...)
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        #         image, target_size, interpolation=cv2.INTER_LINEAR
+        #         image, square_size, interpolation=cv2.INTER_LINEAR
         #     )
         # self.assertEqual(len(prediction_result["boxes"]), 52)
 
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-        #         image, target_size, interpolation=cv2.INTER_CUBIC
+        #         image, square_size, interpolation=cv2.INTER_CUBIC
         #     )
         self.assertEqual(51, len(prediction_result["boxes"]))
         self.assertEqual(4, len(prediction_result["boxes"][0]))

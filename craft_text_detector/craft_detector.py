@@ -213,16 +213,6 @@ def get_prediction(image, craft_net,
         },
         "times": times,
     }
-    # prediction_object.craft_net = craft_net
-    # prediction_object.refine_net = refine_net
-    # prediction_object.cuda = cuda
-    # return prediction_object.get_prediction(image=image,
-    #                                         text_threshold=text_threshold,
-    #                                         link_threshold=link_threshold,
-    #                                         low_text=low_text,
-    #                                         target_size=target_size,
-    #                                         poly=poly,
-    #                                         show_time=show_time)
 
 
 # !!! New oops way.
@@ -232,7 +222,6 @@ class craft_detector:
     """
 
     def __init__(self, image=None,
-                 refiner=True,
                  craft_model_path=None,
                  refinenet_model_path=None,
                  cuda: bool = False,
@@ -240,25 +229,19 @@ class craft_detector:
         """
         Configures class initializer.
         :param image: Input image
-        :param refiner: refiner switch
         :param craft_model_path: craft network(model) path with name
         :param refinenet_model_path: refiner network(model) path with name
         :param cuda: cuda switch
         :param benchmark: cudnn benchmark mode switch
         :return: None
         """
-        self.reload(image=image,
-                    refiner=refiner,
-                    craft_model_path=craft_model_path,
-                    refinenet_model_path=refinenet_model_path,
-                    cuda=cuda,
-                    benchmark=benchmark)
+        self.reload(image=image, craft_model_path=craft_model_path, refinenet_model_path=refinenet_model_path,
+                    cuda=cuda, benchmark=benchmark)
 
     def __call__(self, *args, **kwargs):
         return self.get_prediction(**kwargs)
 
     def reload(self, image=None,
-               refiner=True,
                craft_model_path=None,
                refinenet_model_path=None,
                cuda: bool = False,
@@ -266,7 +249,6 @@ class craft_detector:
         """
         Configures class initializer. Sometimes the class needs to be reloaded (configured) with new parameters
         :param image: Input image
-        :param refiner: refiner switch
         :param craft_model_path: craft network(model) path with name
         :param refinenet_model_path: refiner network(model) path with name
         :param cuda: cuda switch
@@ -275,9 +257,8 @@ class craft_detector:
         """
         # load craft input image
         self.__set_image(image)
-        # load craft net
+        # load craft net and refine net
         self.craft_net = CRAFT()  # initialize
-        # load refine net
         self.refine_net = RefineNet()  # initialize
         # Double check device
         self.__set_device(cuda, benchmark)
@@ -290,24 +271,28 @@ class craft_detector:
         self.CRAFT_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"
         self.craft_model_name = "craft_mlt_25k.pth"
         self.craft_model_path = craft_model_path
+        print("self.craft_model_path: ", self.craft_model_path)
         self.craft_net = self.__load_craftnet_model(self.craft_model_path)
-        self.REFINENET_GDRIVE_URL = (
-            "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
-        )
+
+        self.REFINENET_GDRIVE_URL = "https://drive.google.com/uc?id=1xcE9qpJXp4ofINwXWVhhQIh9S8Z7cuGj"
         self.refinenet_model_name = "craft_refiner_CTW1500.pth"
         self.refinenet_model_path = refinenet_model_path
-        self.__set_refiner(refiner)
+        if not self.refinenet_model_path is None:
+            self.refine_net = self.__load_refinenet_model(self.refinenet_model_path)
+        else:
+            self.refine_net = None
 
     def __set_image(self, image):
         """
-        Configure input image
-        :param image: input image
-        :return: None
+        Configure input image. if image is string then tries to access path.
+        :param image: input image or input image path
+        :return: input image
         """
         self.image = image
         if isinstance(image, str):
             # consider image is image
             self.image = read_image(image)
+        return self.image
 
     def __set_device(self, cuda: bool = False, benchmark: bool = False):
         """
@@ -330,26 +315,12 @@ class craft_detector:
         else:
             self.device = torch.device('cpu')
 
-    def __set_refiner(self, refiner: bool = True):
-        """
-        Configure refiner mode.
-        True -> load refine_net
-        False -> don't load refine_net
-        :param refiner: mode swtich
-        :type refiner: bool
-        :return: None
-        """
-        if refiner:
-            self.refine_net = self.__load_refinenet_model(self.refinenet_model_path)
-        else:
-            self.refine_net = None
-
     def get_prediction(self, image=None,
                        text_threshold: float = 0.7,
                        link_threshold: float = 0.4,
                        low_text: float = 0.4,
-                       target_size: int = 1280,
-                       poly: bool = True,
+                       square_size: int = 1280,
+                       mag_ratio=1, poly: bool = True,
                        show_time: bool = False):
         """
         Predicts bounding boxes where the text. The main function that gives bounding boxes.
@@ -357,7 +328,9 @@ class craft_detector:
         :param text_threshold: text confidence threshold
         :param link_threshold: link confidence threshold
         :param low_text: text low-bound score
-        :param target_size: desired longest image size for inference
+        :param square_size: desired longest image size for inference
+        :param mag_ratio: image magnification ratio
+            Default: 1
         :param poly: enable polygon type
         :param show_time: show processing time
         :return:
@@ -382,13 +355,17 @@ class craft_detector:
             "times": times,
         }
         """
-        if image is None:
-            image = self.image
+
+        # if image is None:
+        #     image = self.image
+        assert not image is None, "Image is None please enter image in numpy format or full path to load"
+        image = self.__set_image(image)
+
         t0 = time.time()
 
         # resize
         img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
-            image, target_size, interpolation=cv2.INTER_CUBIC  # old: cv2.INTER_LINEAR
+            image, square_size, interpolation=cv2.INTER_CUBIC, mag_ratio=mag_ratio  # old: cv2.INTER_LINEAR
         )
         ratio_h = ratio_w = 1 / target_ratio
         resize_time = time.time() - t0
@@ -488,7 +465,8 @@ class craft_detector:
                     text_threshold=0.7,
                     link_threshold=0.4,
                     low_text=0.4,
-                    long_size=1280,
+                    square_size=1280,
+                    mag_ratio=1,
                     show_time=False,
                     crop_type="poly"):
         """
@@ -500,7 +478,9 @@ class craft_detector:
         :param text_threshold: text confidence threshold
         :param link_threshold: link confidence threshold
         :param low_text: text low-bound score
-        :param long_size: desired longest image size for inference
+        :param square_size: desired longest image size for inference
+        :param mag_ratio: image magnification ratio
+            Default: 1
         :param show_time: show processing time
         :param crop_type: crop regions by detected boxes or polys ("poly" or "box")
         :return:
@@ -525,12 +505,10 @@ class craft_detector:
             image = read_image(image)
 
         # perform prediction
-        prediction_result = self.get_prediction(image=image,
-                                                text_threshold=text_threshold,
-                                                link_threshold=link_threshold,
-                                                low_text=low_text,
-                                                target_size=long_size,
-                                                show_time=show_time)
+        prediction_result = self.get_prediction(image=image, text_threshold=text_threshold,
+                                                link_threshold=link_threshold, low_text=low_text,
+                                                square_size=square_size,
+                                                mag_ratio=mag_ratio, show_time=show_time)
 
         # arange regions
         if crop_type == "box":
@@ -595,7 +573,6 @@ class craft_detector:
         weight_path = get_weight_path(craft_model_path,
                                       self.CRAFT_GDRIVE_URL,
                                       self.craft_model_name)
-
         # arange device
         craft_net = self.__load_state_dict(self.craft_net, weight_path)
         return craft_net
@@ -635,18 +612,12 @@ if __name__ == "__main__":
         pred = craft_detector(image=image,
                               craft_model_path=craft_model_path,
                               refinenet_model_path=refinenet_model_path,
-                              refiner=True, cuda=True)
-        prediction_result = pred.detect_text(image=image_path,
-                                             output_dir=output_dir,
-                                             rectify=True,
-                                             export_extra=False,
-                                             text_threshold=0.7,
-                                             link_threshold=0.4,
-                                             low_text=0.4,
-                                             long_size=720,
-                                             show_time=show_time,
-                                             crop_type="poly")
-        print(len(prediction_result["boxes"]))  # 51
+                              cuda=True)
+        prediction_result = pred.detect_text(image=image_path, output_dir=output_dir, rectify=True, export_extra=False,
+                                             text_threshold=0.7, link_threshold=0.4, low_text=0.4, square_size=720,
+                                             show_time=show_time, crop_type="poly")
+        print(len(prediction_result[
+                      "boxes"]))  # refinenet_model_path=None -> 51, refinenet_model_path=refinenet_model_path -> 19
         print(len(prediction_result["boxes"][0]))  # 4
         print(len(prediction_result["boxes"][0][0]))  # 2
         print(int(prediction_result["boxes"][0][0][0]))  # 115
@@ -655,7 +626,7 @@ if __name__ == "__main__":
                                  text_threshold=0.7,
                                  link_threshold=0.4,
                                  low_text=0.4,
-                                 target_size=1280,
+                                 square_size=1280,
                                  show_time=True)
         # export detected text regions
         exported_file_paths = export_detected_regions(

@@ -2,8 +2,10 @@ https://pypi.org/project/craft-text-detector/
 # CRAFT: Character-Region Awareness For Text detection
 
 Packaged, Pytorch-based, easy to use, cross-platform version of the CRAFT text detector | 
-[Paper](https://arxiv.org/abs/1904.01941) |
+[Paper](https://arxiv.org/abs/1904.01941) | [Pretrained Model](https://drive.google.com/open?id=1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ) | [Supplementary](https://youtu.be/HI8MzpY8KMI)
 
+**[Youngmin Baek](mailto:youngmin.baek@navercorp.com), Bado Lee, Dongyoon Han, Sangdoo Yun, Hwalsuk Lee.**
+ 
 ## Overview
 
 PyTorch implementation for CRAFT text detector that effectively detect text area by exploring 
@@ -14,8 +16,21 @@ and affinity scores.
 <img width="1172" alt="teaser" src="./figures/craft_example.gif">
 
 ## Getting started
+### Install dependencies
+#### Requirements
+- torch>=0.4.1
+- torchvision>=0.2.1
+- opencv-python>=3.4.8.29
+- scipy>=1.3.2
+- gdown>=3.10.1
+- setuptools~=46.2.0
+- numpy~=1.18.1
+- check requiremtns.txt
+```
+pip install -r requirements.txt
+```
 
-- Install using pip for Linux and Mac:
+#### Install using pip for Linux and Mac:
 
 ```console
 pip install git+https://github.com/develooper1994/craft_text_detector

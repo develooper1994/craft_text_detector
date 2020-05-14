@@ -1,7 +1,7 @@
 # TODO! rewrite documentation.
 from __future__ import absolute_import
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 __author__ = "Mustafa Selçuk Çağlar"
 
 from craft_text_detector.imgproc import read_image
@@ -47,18 +47,12 @@ def detect_text(image, output_dir=None, rectify=True, export_extra=True,
         prediction_result
     """
     # load craft model
-    craft_net = craft_detector(image=image, refiner=refiner, cuda=cuda)
+    craft_net = craft_detector(image=image, cuda=cuda)
 
-    prediction_result = craft_net.detect_text(image=image,
-                                              output_dir=output_dir,
-                                              rectify=rectify,
-                                              export_extra=export_extra,
-                                              text_threshold=text_threshold,
-                                              link_threshold=link_threshold,
-                                              low_text=low_text,
-                                              long_size=long_size,
-                                              show_time=show_time,
-                                              crop_type=crop_type)
+    prediction_result = craft_net.detect_text(image=image, output_dir=output_dir, rectify=rectify,
+                                              export_extra=export_extra, text_threshold=text_threshold,
+                                              link_threshold=link_threshold, low_text=low_text, square_size=long_size,
+                                              show_time=show_time, crop_type=crop_type)
 
     # return prediction results
     return prediction_result
