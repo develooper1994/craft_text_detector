@@ -73,7 +73,12 @@ output_dir = 'outputs/'
 image = craft.read_image(image_path)
 
 # load models
-craft_net = craft.craft_detector(image=image, refiner=False, cuda=True)
+craft_model_path = "craft_mlt_25k.pth"
+refinenet_model_path = "craft_refiner_CTW1500.pth"
+pred = craft.craft_detector(image=image,
+                            craft_model_path=craft_model_path,
+                            refinenet_model_path=refinenet_model_path,
+                            cuda=True)
 
 # perform prediction
 text_threshold = 0.9
@@ -82,12 +87,12 @@ low_text = 0.2
 cuda = True  # False
 show_time = False
 # perform prediction
-prediction_result = craft_net(image=image,
-                         text_threshold=0.7,
-                         link_threshold=0.4,
-                         low_text=0.4,
-                         target_size=1280,
-                         show_time=True)
+prediction_result = craft.craft_net(image=image,
+                                    text_threshold=0.7,
+                                    link_threshold=0.4,
+                                    low_text=0.4,
+                                    target_size=1280,
+                                    show_time=True)
 # export detected text regions
 exported_file_paths = craft.export_detected_regions(
     image_path=image_path,
@@ -117,11 +122,11 @@ SynthText | SynthText | - | For SynthText only | [SynthText for baidu drive](htt
 LinkRefiner | CTW1500 | - | Used with the General Model |  [LinkRefiner for baidu drive]() |     [LinkRefiner for google drive](https://drive.google.com/open?id=1ZDe0WRwlxLRkwofQt8C18ZTF-oA3vbfs)
 
 * Run with pretrained model
-``` (with python 3.7)
+``` (with upto python 3.7)
 python test_on_dataset.py --trained_model=[weightfile] --test_folder=[folder path to test images]
 ```
 
-The result image and socre maps will be saved to `./result` by default.
+The result image and score maps will be saved to `./result` by default.
 
 ### Arguments
 * `--trained_model`: pretrained model
