@@ -23,12 +23,12 @@ and affinity scores.
     opencv-python>=3.4.8.29
     scipy>=1.3.2
     gdown>=3.10.1
-    setuptools~=46.2.0
-    numpy~=1.18.1
-    argparse~=1.4.0
-    pillow~=7.0.0
-    scikit-image~=0.17.1
-    h5py~=2.10.0
+    setuptools>=46.2.0
+    numpy>=1.18.1
+    argparse>=1.4.0
+    pillow>=7.0.0
+    scikit-image>=0.17.1
+    h5py>=2.10.0
 - check requiremtns.txt
 ```
 pip install -r requirements.txt
@@ -138,7 +138,7 @@ The result image and socre maps will be saved to `./result` by default.
 * `--refiner_model`: pretrained refiner model
 
 ### Training
-COMING!!! <br>
+Planning!!! <br>
 `Note: When you train the IC15-Data or MLT-Data, please see the annotation in data_loader.py line 92 and line 108-112.`
 
 
