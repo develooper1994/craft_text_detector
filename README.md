@@ -91,7 +91,7 @@ prediction_result = craft.craft_net(image=image,
                                     text_threshold=0.7,
                                     link_threshold=0.4,
                                     low_text=0.4,
-                                    target_size=1280,
+                                    square_size=1280,
                                     show_time=True)
 # export detected text regions
 exported_file_paths = craft.export_detected_regions(

@@ -31,6 +31,7 @@ REFINENET_GDRIVE_URL = "https://drive.google.com/open?id=1ZDe0WRwlxLRkwofQt8C18Z
 
 
 # !!! New oops way.
+# TODO! Detected articles will be sorted according to the coordinate.
 class craft_detector:
     """
     Craft(Character Region Awareness for Text Detection) implementation
@@ -322,7 +323,7 @@ class craft_detector:
         if image is None:
             image = self.image
         elif isinstance(image, str):
-            # consider image is image
+            # consider image is image_path
             image = read_image(image)
 
         # perform prediction

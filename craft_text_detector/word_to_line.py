@@ -24,10 +24,18 @@ def _get_max_coord(bbs, x_or_y):
     assert x_or_y in ["x", "y"], "x_or_y can only be x or y"
     max_value = 0.0
     for bb in bbs:
+        # bb0 = bb[0]
+        # box0_x0, box0_y0 = bb0[0::2]  # top- left corner <-> bottom- right corner
+        box_x0, box_y0 = bb[0]
+        # bb1 = bb[2]
+        # box1_x, box1_y = bb1[0::2]  # top- left corner <-> bottom- right corner
+        box_x1, box_y1 = bb[2]
         if x_or_y == "x":
-            value = bb[0] + bb[2]
+            # value = bb0[:, 0] + bb1[:, 0]
+            value = abs(box_x0 - box_x1)
         else:
-            value = bb[1] + bb[3]
+            # value = bb[1] + bb[3]
+            value = abs(box_y0 + box_y1)
         if value > max_value:
             max_value = value
     return max_value
@@ -67,13 +75,21 @@ def _get_bounding_box_of_bb_list(bbs_in_a_line):
     return line_bb
 
 
-def _filter_bbs(bbs, min_size=0.005):
+def _filter_bbs(bbs, min_size=10*10):  # 10px x 10px
     '''
     Remove bounding boxes that are too small 
     '''
     output_bbs = []
+    # 0---1
+    # |   |
+    # 3---2
     for bb in bbs:
-        if bb[2] * bb[3] > min_size:
+        x0, y0 = bb[0]
+        x1, y1 = bb[2]
+        xlen = abs(x1-x0)
+        ylen = abs(y1-y0)
+        box_size = xlen*ylen
+        if box_size > min_size:
             output_bbs.append(bb)
     return np.array(output_bbs)
 
@@ -83,9 +99,11 @@ def _get_line_overlap_percentage(y1, h1, y2, h2):
     Calculates how much (percentage) y2->y2+h2 overlaps with y1->y1+h1.
     Algorithm assumes that y2 is larger than y1
     '''
-    if y2 > y1 and (y1 + h1) > y2:
+    a = np.array(y2 > y1)
+    b = np.array((y1 + h1) > y2)
+    if np.logical_and(a, b).all():
         # Is y2 enclosed in y1
-        if (y1 + h1) > (y2 + h2):
+        if np.array((y1 + h1) > (y2 + h2)).all():
             return 1.0
         else:
             return ((y1 + h1) - (y2)) / h1
@@ -116,22 +134,25 @@ def combine_bbs_into_lines(bbs, y_overlap=0.2):
     '''
     line_bbs = []
     bbs_in_a_line = []
-    y_indexes = np.argsort(bbs[:, 1])
+    # x_indexes = np.argsort(bbs[:, 0, 0])
+    y_indexes = np.argsort(bbs[:, 0, 1])
     # Iterate through the sorted bounding box.
     previous_y_coords = None
     for y_index in y_indexes:
-        y_coords = (bbs[y_index, 1], bbs[y_index, 3])  # y and height
+        # y_coords = (bbs[y_index, 1], bbs[y_index, 3])  # y and height
+        y_coords = (bbs[y_index, 0], bbs[y_index, 2])  # y and height
 
         # new line if the overlap is more than y_overlap
         if previous_y_coords is not None:
-            line_overlap_percentage1 = _get_line_overlap_percentage(
-                previous_y_coords[0], previous_y_coords[1],
-                y_coords[0], y_coords[1])
-            line_overlap_percentage2 = _get_line_overlap_percentage(
-                y_coords[0], y_coords[1],
-                previous_y_coords[0], previous_y_coords[1])
-            line_overlap_percentage = max(line_overlap_percentage1, line_overlap_percentage2)
-            if line_overlap_percentage < y_overlap:
+            # line_overlap_percentage1 = _get_line_overlap_percentage(
+            #     previous_y_coords[0], previous_y_coords[1],
+            #     y_coords[0], y_coords[1])
+            # line_overlap_percentage2 = _get_line_overlap_percentage(
+            #     y_coords[0], y_coords[1],
+            #     previous_y_coords[0], previous_y_coords[1])
+            # line_overlap_percentage = max(line_overlap_percentage1, line_overlap_percentage2)
+            # if line_overlap_percentage < y_overlap:
+            if y_overlap > 0:
                 line_bb = _get_bounding_box_of_bb_list(bbs_in_a_line)
                 line_bbs.append(line_bb)
                 bbs_in_a_line = []
@@ -148,7 +169,7 @@ def sort_bbs_line_by_line(bbs, y_overlap=0.2):
     '''
     Function to combine word bbs into lines.
     '''
-    line_bbs = _filter_bbs(bbs, min_size=0.0001)  # Filter small word BBs
+    line_bbs = _filter_bbs(bbs, min_size=10*10)  # Filter small word BBs
     line_bbs = combine_bbs_into_lines(line_bbs, y_overlap)
     line_bb_expanded = []
     for line_bb in line_bbs:
