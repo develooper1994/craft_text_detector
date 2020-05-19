@@ -1,4 +1,4 @@
-#%% modules
+# %% modules
 
 import numpy as np
 from pprint import pprint
@@ -6,29 +6,29 @@ from pprint import pprint
 import craft_text_detector as craft
 from craft_text_detector.word_to_line import sort_bbs_line_by_line
 
-#%% md
+# %% md
 
 #### set image path and export folder directory
 
-#%%
+# %%
 
 image_name = 'idcard.png'
 image_path = 'figures/' + image_name
 output_dir = 'outputs/'
 
-#%% md
+# %% md
 
 #### read image
 
-#%%
+# %%
 
 image = craft.read_image(image_path)
 
-#%% md
+# %% md
 
 #### load models
 
-#%%
+# %%
 
 craft_model_path = "../craft_mlt_25k.pth"
 refinenet_model_path = "../craft_refiner_CTW1500.pth"
@@ -37,12 +37,11 @@ craft_net = craft.craft_detector(image=image,
                                  refinenet_model_path=refinenet_model_path,
                                  cuda=True)
 
-
-#%% md
+# %% md
 
 #### perform prediction
 
-#%%
+# %%
 
 text_threshold = 0.9
 link_threshold = 0.2
@@ -51,24 +50,24 @@ cuda = True  # False
 show_time = False
 # perform prediction
 prediction_result = craft_net(image=image,
-                         text_threshold=0.7,
-                         link_threshold=0.4,
-                         low_text=0.4,
-                         square_size=1280,
-                         show_time=True)
+                              text_threshold=0.7,
+                              link_threshold=0.4,
+                              low_text=0.4,
+                              square_size=1280,
+                              show_time=True)
 
-#%% md
+# %% md
 
 ### Inspect predicted results
 
-#%%
+# %%
 
 keys = prediction_result.keys()
 heatmap_keys = prediction_result["heatmaps"].keys()
 pprint(keys)
 pprint(heatmap_keys)
 
-#%%
+# %%
 
 boxes = prediction_result['boxes']
 boxes_as_ratios = prediction_result['boxes_as_ratios']
@@ -83,7 +82,7 @@ pprint(polys_as_ratios.shape)
 pprint(text_score_heatmap.shape)
 pprint(link_score_heatmap.shape)
 
-#%%
+# %%
 
 coords = np.array(boxes).astype(np.int32)
 pprint(coords.shape)
@@ -96,7 +95,8 @@ upper_left = coords[:, 0]
 upper_left_x = upper_left[:, 0]
 upper_left_x_arg = np.argsort(upper_left_x)
 upper_left_y = upper_left[:, 1]
-upper_left_y_arg = np.argsort(upper_left_y)
+upper_left_y_arg = np.argsort(upper_left_y)  # horizontal line
+
 
 # note necessary
 # bottom_right = coords[:, 2]
@@ -108,8 +108,8 @@ upper_left_y_arg = np.argsort(upper_left_y)
 # line_bbs = sort_bbs_line_by_line(boxes)
 
 def coord_sort(boxes):
-    line=[]
-    lines=[]
+    line = []
+    lines = []
     number_of_box = boxes.shape[0]
     # all bounding boxes.
     for i, box in enumerate(boxes):
@@ -118,13 +118,14 @@ def coord_sort(boxes):
         if previous_box is not None:
             pass
 
-coord_sort(boxes)
 
-#%% md
+# coord_sort(boxes)
+
+# %% md
 
 #### export detected text regions
 
-#%%
+# %%
 
 exported_file_paths = craft.export_detected_regions(
     image_path=image_path,
@@ -134,11 +135,11 @@ exported_file_paths = craft.export_detected_regions(
     rectify=True
 )
 
-#%% md
+# %% md
 
 #### export heatmap, detection points, box visualization
 
-#%%
+# %%
 
 # gives (image)_text_detection.txt file
 craft.export_extra_results(
