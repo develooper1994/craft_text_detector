@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import torch
 import torch.nn as nn
+
 from craft_text_detector.models.basenet.vgg16_bn import init_weights
 
 

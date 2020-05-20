@@ -1,4 +1,5 @@
 import unittest
+
 import craft_text_detector
 
 # set image path and export folder directory
@@ -11,12 +12,12 @@ craft_model_path = "../craft_mlt_25k.pth"
 refinenet_model_path = "../craft_refiner_CTW1500.pth"
 
 # load image
-image = craft_text_detector.read_image(image_path)
+image = craft_text_detector.imgproc.read_image(image_path)
 # refine_net = None
-pred = craft_text_detector.craft_detector(image=image,
-                                          craft_model_path=craft_model_path,
-                                          refinenet_model_path=refinenet_model_path,
-                                          cuda=cuda)
+pred = craft_text_detector.craft_detector.craft_detector(image=image,
+                                                         craft_model_path=craft_model_path,
+                                                         refinenet_model_path=refinenet_model_path,
+                                                         cuda=cuda)
 
 
 class TestCraftTextDetector(unittest.TestCase):
@@ -30,7 +31,7 @@ class TestCraftTextDetector(unittest.TestCase):
 
     def test_get_prediction(self):
         # load image
-        image = craft_text_detector.read_image(image_path)
+        image = craft_text_detector.imgproc.read_image(image_path)
 
         # perform prediction
         text_threshold = 0.9
@@ -52,7 +53,8 @@ class TestCraftTextDetector(unittest.TestCase):
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
         #         image, square_size, interpolation=cv2.INTER_CUBIC
         #     )
-        self.assertEqual(15, len(prediction_result["boxes"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 15
+        self.assertEqual(15, len(prediction_result[
+                                     "boxes"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 15
         self.assertEqual(4, len(prediction_result["boxes"][0]))
         self.assertEqual(2, len(prediction_result["boxes"][0][0]))
         self.assertEqual(111, int(prediction_result["boxes"][0][0][0]))
@@ -65,12 +67,13 @@ class TestCraftTextDetector(unittest.TestCase):
         #     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(
         #         image, square_size, interpolation=cv2.INTER_CUBIC
         #     )
-        self.assertEqual(15, len(prediction_result["polys"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 15
+        self.assertEqual(15, len(prediction_result[
+                                     "polys"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 15
         self.assertEqual((240, 368, 3), prediction_result["heatmaps"]["text_score_heatmap"].shape)
 
     def test_detect_text(self):
         # refiner = False
-        pred = craft_text_detector.craft_detector(image=image,
+        pred = craft_text_detector.craft_detector.craft_detector(image=image,
                                                   craft_model_path=craft_model_path,
                                                   refinenet_model_path=None,
                                                   cuda=cuda)

@@ -4,11 +4,12 @@ from __future__ import absolute_import
 __version__ = "0.2.3"
 __author__ = "Mustafa Selçuk Çağlar"
 
-from craft_text_detector.imgproc import read_image
-
-from craft_text_detector.file_utils import export_detected_regions, export_extra_results
-
-from craft_text_detector.craft_detector import craft_detector
+from . import craft_detector
+from . import craft_utils
+from . import expand_bounding_box
+from . import file_utils
+from . import imgproc
+from . import word_to_line
 
 
 def detect_text(image, output_dir=None, rectify=True, export_extra=True,
@@ -43,7 +44,7 @@ def detect_text(image, output_dir=None, rectify=True, export_extra=True,
         prediction_result
     """
     # load craft model
-    craft_net = craft_detector(image=image, cuda=cuda)
+    craft_net = craft_detector.craft_detector(image=image, cuda=cuda)
 
     prediction_result = craft_net.detect_text(image=image, output_dir=output_dir, rectify=rectify,
                                               export_extra=export_extra, text_threshold=text_threshold,
@@ -52,3 +53,4 @@ def detect_text(image, output_dir=None, rectify=True, export_extra=True,
 
     # return prediction results
     return prediction_result
+

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import os
-import cv2
 import copy
+import os
+
+import cv2
 import gdown
 import numpy as np
 

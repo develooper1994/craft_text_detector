@@ -1,7 +1,8 @@
+import math
+
+import Polygon as plg
 import cv2
 import numpy as np
-import math
-import Polygon as plg
 
 
 def watershed1(image, viz=False):

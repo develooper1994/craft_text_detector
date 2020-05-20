@@ -9,8 +9,6 @@ import re
 import sys
 import os
 import codecs
-import importlib
-from io import StringIO
 
 
 def print_help():

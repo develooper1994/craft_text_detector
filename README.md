@@ -70,12 +70,12 @@ image_path = 'figures/' + image_name
 output_dir = 'outputs/'
 
 # read image
-image = craft.read_image(image_path)
+image = craft.imgproc.read_image(image_path)
 
 # load models
 craft_model_path = "craft_mlt_25k.pth"
 refinenet_model_path = "craft_refiner_CTW1500.pth"
-pred = craft.craft_detector(image=image,
+pred = craft.craft_detector.craft_detector(image=image,
                             craft_model_path=craft_model_path,
                             refinenet_model_path=refinenet_model_path,
                             cuda=True)

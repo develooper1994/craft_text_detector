@@ -1,20 +1,20 @@
 ###for icdar2015####
 
+import itertools
+import random
+import re
+
+import Polygon as plg
+import scipy.io as scio
 import torch
 import torch.utils.data as data
-import scipy.io as scio
-from craft_text_detector.train.gaussian import GaussianTransformer
-from craft_text_detector.train.watershed import watershed
-import re
-import itertools
-from craft_text_detector.file_utils import *
-from craft_text_detector.train.mep import mep
-import random
-from PIL import Image
 import torchvision.transforms as transforms
-import craft_text_detector.craft_utils
-import Polygon as plg
-import time
+from PIL import Image
+
+from craft_text_detector.file_utils import *
+from craft_text_detector.train.gaussian import GaussianTransformer
+from craft_text_detector.train.mep import mep
+from craft_text_detector.train.watershed import watershed
 
 
 def ratio_area(h, w, box):

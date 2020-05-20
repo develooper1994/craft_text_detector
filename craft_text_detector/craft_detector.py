@@ -1,23 +1,28 @@
-import os
 import time
 
 import cv2
 import numpy as np
 import torch
-from torch.autograd import Variable
 from torch.backends import cudnn
 
-from craft_text_detector import (
-    craft_utils,
-    read_image,
-    export_detected_regions,
-    export_extra_results,
-)
+from craft_text_detector import craft_utils
 from craft_text_detector import imgproc
-from craft_text_detector.models.craftnet import CRAFT
-from craft_text_detector.models.refinenet import RefineNet
 # my google drive
 from craft_text_detector.craft_detector_util import copyStateDict, get_weight_path
+from craft_text_detector.file_utils import (
+    export_detected_regions,
+    export_extra_results
+)
+from craft_text_detector.imgproc import read_image
+from craft_text_detector.models.craftnet import CRAFT
+from craft_text_detector.models.refinenet import RefineNet
+
+# from . import (
+#     craft_utils,
+#     read_image,
+#     export_detected_regions,
+#     export_extra_results,
+# )
 
 # Original
 # CRAFT_GENERAL_GDRIVE_URL = "https://drive.google.com/uc?id=1bupFXqT-VU6Jjeul13XP7yx2Sg5IHr4J"

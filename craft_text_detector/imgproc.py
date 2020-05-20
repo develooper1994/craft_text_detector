@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import numpy as np
 import cv2
+import numpy as np
 
 
 def read_image(img_file):

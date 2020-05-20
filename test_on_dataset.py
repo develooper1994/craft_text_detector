@@ -1,29 +1,15 @@
 # !!! not tested !!!
 # -*- coding: utf-8 -*-
-import json
-import zipfile
-from collections import OrderedDict
 
-import sys
+import argparse
 import os
 import time
-import argparse
 
-from PIL import Image
 import cv2
-from skimage import io
-import numpy as np
 
-import torch
-import torch.nn as nn
-import torch.backends.cudnn as cudnn
-from torch.autograd import Variable
-
-import craft_text_detector.craft_utils as craft_utils
-import craft_text_detector.imgproc as imgproc
-import craft_text_detector.file_utils as file_utils
 import craft_text_detector
-
+import craft_text_detector.file_utils as file_utils
+import craft_text_detector.imgproc as imgproc
 from craft_text_detector.craft_detector_util import str2bool
 
 parser = argparse.ArgumentParser(description='CRAFT Text Detection')

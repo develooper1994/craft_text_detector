@@ -1,10 +1,10 @@
 # %% modules
 
-import numpy as np
 from pprint import pprint
 
+import numpy as np
+
 import craft_text_detector as craft
-from craft_text_detector.word_to_line import sort_bbs_line_by_line
 
 # %% md
 
@@ -22,7 +22,7 @@ output_dir = 'outputs/'
 
 # %%
 
-image = craft.read_image(image_path)
+image = craft.imgproc.read_image(image_path)
 
 # %% md
 
@@ -32,10 +32,10 @@ image = craft.read_image(image_path)
 
 craft_model_path = "../craft_mlt_25k.pth"
 refinenet_model_path = "../craft_refiner_CTW1500.pth"
-craft_net = craft.craft_detector(image=image,
-                                 craft_model_path=craft_model_path,
-                                 refinenet_model_path=refinenet_model_path,
-                                 cuda=True)
+craft_net = craft.craft_detector.craft_detector(image=image,
+                                                craft_model_path=craft_model_path,
+                                                refinenet_model_path=refinenet_model_path,
+                                                cuda=True)
 
 # %% md
 
@@ -127,7 +127,7 @@ def coord_sort(boxes):
 
 # %%
 
-exported_file_paths = craft.export_detected_regions(
+exported_file_paths = craft.file_utils.export_detected_regions(
     image_path=image_path,
     image=image,
     regions=prediction_result["boxes"],
@@ -142,7 +142,7 @@ exported_file_paths = craft.export_detected_regions(
 # %%
 
 # gives (image)_text_detection.txt file
-craft.export_extra_results(
+craft.file_utils.export_extra_results(
     image_path=image_path,
     image=image,
     regions=prediction_result["boxes"],

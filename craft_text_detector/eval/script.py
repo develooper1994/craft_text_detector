@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from collections import namedtuple
-from eval import rrc_evaluation_funcs
 import importlib
-import zipfile
 import os
+import zipfile
+from collections import namedtuple
+
+from eval import rrc_evaluation_funcs
+
+
 def evaluation_imports():
     """
     evaluation_imports: Dictionary ( key = module name , value = alias  )  with python modules used in the evaluation. 

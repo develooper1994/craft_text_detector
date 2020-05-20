@@ -1,15 +1,16 @@
 import os
 import time
+# TODO! replace with my implementation
+from test import test_net
 
 import cv2
 
 from craft_text_detector import file_utils
 from craft_text_detector import imgproc
+
+
 # from craft_text_detector.eval.icdar2015.script import eval_2015
 # from craft_text_detector.eval.icdar2013.script import eval_2013
-
-# TODO! replace with my implementation
-from test import test_net
 
 
 def eval2013(craft, test_folder, result_folder, text_threshold=0.7, link_threshold=0.4, low_text=0.4):
