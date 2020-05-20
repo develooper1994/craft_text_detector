@@ -1,4 +1,3 @@
-import torch
 import argparse
 import random
 import time
@@ -11,12 +10,11 @@ import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data as data
 from craft import CRAFT  # TODO! replace with my implementation
-from eval13.script import getresult
-from torch.autograd import Variable
-
 from craft_text_detector.train.data_loader import Synth80k, ICDAR2013
 ###import file#######
 from craft_text_detector.train.mseloss import Maploss
+from eval13.script import getresult
+from torch.autograd import Variable
 
 #3.2768e-5
 random.seed(42)

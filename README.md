@@ -76,9 +76,9 @@ image = craft.imgproc.read_image(image_path)
 craft_model_path = "craft_mlt_25k.pth"
 refinenet_model_path = "craft_refiner_CTW1500.pth"
 pred = craft.craft_detector.craft_detector(image=image,
-                            craft_model_path=craft_model_path,
-                            refinenet_model_path=refinenet_model_path,
-                            cuda=True)
+                                           craft_model_path=craft_model_path,
+                                           refinenet_model_path=refinenet_model_path,
+                                           cuda=True)
 
 # perform prediction
 text_threshold = 0.9
@@ -87,14 +87,14 @@ low_text = 0.2
 cuda = True  # False
 show_time = False
 # perform prediction
-prediction_result = craft.craft_net(image=image,
-                                    text_threshold=0.7,
-                                    link_threshold=0.4,
-                                    low_text=0.4,
-                                    square_size=1280,
-                                    show_time=True)
+prediction_result = pred.get_prediction(image=image,
+                                        text_threshold=0.7,
+                                        link_threshold=0.4,
+                                        low_text=0.4,
+                                        square_size=1280,
+                                        show_time=True)
 # export detected text regions
-exported_file_paths = craft.export_detected_regions(
+exported_file_paths = craft.file_utils.export_detected_regions(
     image_path=image_path,
     image=image,
     regions=prediction_result["boxes"],
@@ -102,7 +102,7 @@ exported_file_paths = craft.export_detected_regions(
     rectify=True
 )
 # export heatmap, detection points, box visualization
-craft.export_extra_results(
+craft.file_utils.export_extra_results(
     image_path=image_path,
     image=image,
     regions=prediction_result["boxes"],

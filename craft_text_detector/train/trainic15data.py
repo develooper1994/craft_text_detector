@@ -1,30 +1,19 @@
-import os
 import torch
-import torch.utils.data as data
-import cv2
-import scipy.io as scio
 import argparse
-import time
-import torch.nn as nn
-import torch.backends.cudnn as cudnn
-import torch.optim as optim
 import random
-import re
+import time
+from collections import OrderedDict
 from test import test
 
-
-from math import exp
+import torch
+import torch.backends.cudnn as cudnn
+import torch.optim as optim
+import torch.utils.data as data
+from craft import CRAFT  # TODO! replace with my implementation
 from data_loader import ICDAR2015, Synth80k
-
+from eval.script import getresult
 ###import file#######
 from mseloss import Maploss
-
-
-
-from collections import OrderedDict
-from eval.script import getresult
-
-from craft import CRAFT  # TODO! replace with my implementation
 from torch.autograd import Variable
 
 #3.2768e-5

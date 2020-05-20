@@ -3,8 +3,6 @@ import time
 import cv2
 import numpy as np
 import torch
-from torch.backends import cudnn
-
 from craft_text_detector import craft_utils
 from craft_text_detector import imgproc
 # my google drive
@@ -16,6 +14,7 @@ from craft_text_detector.file_utils import (
 from craft_text_detector.imgproc import read_image
 from craft_text_detector.models.craftnet import CRAFT
 from craft_text_detector.models.refinenet import RefineNet
+from torch.backends import cudnn
 
 # from . import (
 #     craft_utils,

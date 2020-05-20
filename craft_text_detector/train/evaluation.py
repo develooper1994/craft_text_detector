@@ -4,7 +4,6 @@ import time
 from test import test_net
 
 import cv2
-
 from craft_text_detector import file_utils
 from craft_text_detector import imgproc
 

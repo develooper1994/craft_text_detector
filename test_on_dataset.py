@@ -1,15 +1,14 @@
-# !!! not tested !!!
+# TODO !!! not tested !!!
 # -*- coding: utf-8 -*-
 
 import argparse
 import os
 import time
 
-import cv2
-
 import craft_text_detector
 import craft_text_detector.file_utils as file_utils
 import craft_text_detector.imgproc as imgproc
+import cv2
 from craft_text_detector.craft_detector_util import str2bool
 
 parser = argparse.ArgumentParser(description='CRAFT Text Detection')
@@ -58,9 +57,9 @@ if __name__ == '__main__':
     poly = args.poly
     show_time = args.show_time
 
-    craft_net = craft_text_detector.craft_detector(craft_model_path=craft_model_path,
-                                                   refinenet_model_path=refinenet_model_path,
-                                                   cuda=cuda)  # initialize
+    craft_net = craft_text_detector.craft_detector.craft_detector(craft_model_path=craft_model_path,
+                                                                  refinenet_model_path=refinenet_model_path,
+                                                                  cuda=cuda)  # initialize
 
     print('Loading weights from checkpoint (' + args.trained_model + ')')
 

@@ -2,9 +2,8 @@
 
 from pprint import pprint
 
-import numpy as np
-
 import craft_text_detector as craft
+import numpy as np
 
 # %% md
 

@@ -10,7 +10,6 @@ import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
 from PIL import Image
-
 from craft_text_detector.file_utils import *
 from craft_text_detector.train.gaussian import GaussianTransformer
 from craft_text_detector.train.mep import mep

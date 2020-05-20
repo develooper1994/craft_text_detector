@@ -1,20 +1,15 @@
 import torch
 import torch.utils.data as data
-import numpy as np
 import argparse
 import time
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import random
-import re
-import water
 from test import test
 
-from data_loader import ICDAR2015, Synth80k, ICDAR2013
+from data_loader import Synth80k
 
 ###import file#######
-from augmentation import random_rot, crop_img_bboxes
 from mseloss import Maploss
 
 
@@ -22,10 +17,6 @@ from mseloss import Maploss
 from collections import OrderedDict
 from eval.script import getresult
 
-
-
-from PIL import Image
-from torchvision.transforms import transforms
 from craft import CRAFT  # TODO! replace with my implementation
 from torch.autograd import Variable
 
