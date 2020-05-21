@@ -9,12 +9,20 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data as data
-from craft import CRAFT  # TODO! replace with my implementation
-from data_loader import ICDAR2015, Synth80k
-from eval.script import getresult
-###import file#######
-from mseloss import Maploss
 from torch.autograd import Variable
+
+try:
+    from craft import CRAFT  # TODO! replace with my implementation
+    from data_loader import ICDAR2015, Synth80k
+    from eval.script import getresult
+    ###import file#######
+    from mseloss import Maploss
+except:
+    from craft import CRAFT  # TODO! replace with my implementation
+    from .data_loader import ICDAR2015, Synth80k
+    from ..eval.script import getresult
+    ###import file#######
+    from .mseloss import Maploss
 
 #3.2768e-5
 random.seed(42)

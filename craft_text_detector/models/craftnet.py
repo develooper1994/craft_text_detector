@@ -3,7 +3,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from craft_text_detector.models.basenet.vgg16_bn import vgg16_bn, init_weights
+try:
+    # direct call
+    from craft_text_detector.models.basenet.vgg16_bn import vgg16_bn, init_weights
+except:
+    # indirect call
+    try:
+        from models.basenet.vgg16_bn import vgg16_bn, init_weights
+    except:
+        from ..models.basenet.vgg16_bn import vgg16_bn, init_weights
 
 
 class double_conv(nn.Module):

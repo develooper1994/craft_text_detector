@@ -3,18 +3,47 @@ import time
 import cv2
 import numpy as np
 import torch
-from craft_text_detector import craft_utils
-from craft_text_detector import imgproc
-# my google drive
-from craft_text_detector.craft_detector_util import copyStateDict, get_weight_path
-from craft_text_detector.file_utils import (
-    export_detected_regions,
-    export_extra_results
-)
-from craft_text_detector.imgproc import read_image
-from craft_text_detector.models.craftnet import CRAFT
-from craft_text_detector.models.refinenet import RefineNet
 from torch.backends import cudnn
+
+try:
+    # direct call
+    from craft_text_detector import craft_utils
+    from craft_text_detector import imgproc
+    # my google drive
+    from craft_text_detector.craft_detector_util import copyStateDict, get_weight_path
+    from craft_text_detector.file_utils import (
+        export_detected_regions,
+        export_extra_results
+    )
+    from craft_text_detector.imgproc import read_image
+    from craft_text_detector.models.craftnet import CRAFT
+    from craft_text_detector.models.refinenet import RefineNet
+except:
+    # indirect call
+    try:
+        import craft_utils
+        import imgproc
+        # my google drive
+        from craft_detector_util import copyStateDict, get_weight_path
+        from file_utils import (
+            export_detected_regions,
+            export_extra_results
+        )
+        from imgproc import read_image
+        from models.craftnet import CRAFT
+        from models.refinenet import RefineNet
+    except:
+        from . import craft_utils
+        from . import imgproc
+        # my google drive
+        from .craft_detector_util import copyStateDict, get_weight_path
+        from .file_utils import (
+            export_detected_regions,
+            export_extra_results
+        )
+        from .imgproc import read_image
+        from .models.craftnet import CRAFT
+        from .models.refinenet import RefineNet
 
 # from . import (
 #     craft_utils,

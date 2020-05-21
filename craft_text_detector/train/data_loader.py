@@ -10,10 +10,18 @@ import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
 from PIL import Image
-from craft_text_detector.file_utils import *
-from craft_text_detector.train.gaussian import GaussianTransformer
-from craft_text_detector.train.mep import mep
-from craft_text_detector.train.watershed import watershed
+try:
+    # direct call
+    from craft_text_detector.file_utils import *
+    from craft_text_detector.train.gaussian import GaussianTransformer
+    from craft_text_detector.train.mep import mep
+    from craft_text_detector.train.watershed import watershed
+except:
+    # indirect call
+    from ..file_utils import *
+    from ..train.gaussian import GaussianTransformer
+    from ..train.mep import mep
+    from ..train.watershed import watershed
 
 
 def ratio_area(h, w, box):

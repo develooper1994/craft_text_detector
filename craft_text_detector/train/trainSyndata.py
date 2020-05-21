@@ -1,24 +1,27 @@
+import random
+import time
+from collections import OrderedDict
+import argparse
+
 import torch
 import torch.utils.data as data
-import argparse
-import time
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
-import random
+from torch.autograd import Variable
 from test import test
 
-from data_loader import Synth80k
-
-###import file#######
-from mseloss import Maploss
-
-
-
-from collections import OrderedDict
-from eval.script import getresult
-
-from craft import CRAFT  # TODO! replace with my implementation
-from torch.autograd import Variable
+try:
+    from data_loader import Synth80k
+    ###import file#######
+    from mseloss import Maploss
+    from eval.script import getresult
+    from craft import CRAFT  # TODO! replace with my implementation
+except:
+    from .data_loader import Synth80k
+    ###import file#######
+    from .mseloss import Maploss
+    from ..eval.script import getresult
+    from craft import CRAFT  # TODO! replace with my implementation
 
 #3.2768e-5
 random.seed(42)

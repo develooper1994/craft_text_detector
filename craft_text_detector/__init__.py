@@ -4,13 +4,28 @@ from __future__ import absolute_import
 __version__ = "0.2.3"
 __author__ = "Mustafa Selçuk Çağlar"
 
-from . import craft_detector
-from . import craft_utils
-from . import expand_bounding_box
-from . import file_utils
-from . import imgproc
-from . import word_to_line
-
+try:
+    from . import craft_detector
+    from . import craft_utils
+    from . import expand_bounding_box
+    from . import file_utils
+    from . import imgproc
+    from . import word_to_line
+except:
+    try:
+        from ..craft_text_detector import craft_detector
+        from ..craft_text_detector import craft_utils
+        from ..craft_text_detector import expand_bounding_box
+        from ..craft_text_detector import file_utils
+        from ..craft_text_detector import imgproc
+        from ..craft_text_detector import word_to_line
+    except:
+        from detection.craft_text_detector.craft_text_detector import craft_detector
+        from detection.craft_text_detector.craft_text_detector import craft_utils
+        from detection.craft_text_detector.craft_text_detector import expand_bounding_box
+        from detection.craft_text_detector.craft_text_detector import file_utils
+        from detection.craft_text_detector.craft_text_detector import imgproc
+        from detection.craft_text_detector.craft_text_detector import word_to_line
 
 def detect_text(image, output_dir=None, rectify=True, export_extra=True,
                 text_threshold=0.7, link_threshold=0.4,

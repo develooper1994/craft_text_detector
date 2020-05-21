@@ -2,7 +2,15 @@ import os
 from collections import OrderedDict
 from pathlib import Path
 
-from craft_text_detector import file_utils
+try:
+    # direct call
+    from craft_text_detector import file_utils
+except:
+    # indirect call
+    try:
+        import file_utils
+    except:
+        from . import file_utils
 
 
 def copyStateDict(state_dict):

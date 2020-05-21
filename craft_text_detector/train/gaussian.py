@@ -3,7 +3,12 @@ from math import exp
 
 import cv2
 import numpy as np
-from craft_text_detector import imgproc
+try:
+    # direct call
+    from craft_text_detector import imgproc
+except:
+    # indirect call
+    from .. import imgproc
 
 
 class GaussianTransformer(object):

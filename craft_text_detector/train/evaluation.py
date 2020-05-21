@@ -4,9 +4,14 @@ import time
 from test import test_net
 
 import cv2
-from craft_text_detector import file_utils
-from craft_text_detector import imgproc
-
+try:
+    # direct call
+    from craft_text_detector import file_utils
+    from craft_text_detector import imgproc
+except:
+    # indirect call
+    from .. import file_utils
+    from .. import imgproc
 
 # from craft_text_detector.eval.icdar2015.script import eval_2015
 # from craft_text_detector.eval.icdar2013.script import eval_2013

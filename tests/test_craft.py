@@ -1,6 +1,10 @@
 import unittest
 
-import craft_text_detector
+try:
+    from .craft_text_detector import craft_detector
+except:
+    # import detection.craft_text_detector as craft_text_detector
+    from detection.craft_text_detector import craft_text_detector
 
 # set image path and export folder directory
 image_name = 'idcard.png'
@@ -73,7 +77,7 @@ class TestCraftTextDetector(unittest.TestCase):
 
     def test_detect_text(self):
         # refiner = False
-        pred = craft_text_detector.craft_detector.craft_detector(image=image,
+        pred = craft_text_detector.craft_detector(image=image,
                                                   craft_model_path=craft_model_path,
                                                   refinenet_model_path=None,
                                                   cuda=cuda)

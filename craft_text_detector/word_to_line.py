@@ -1,6 +1,9 @@
 import numpy as np
 
-from .expand_bounding_box import expand_bounding_box
+try:
+    from expand_bounding_box import expand_bounding_box
+except:
+    from .expand_bounding_box import expand_bounding_box
 
 
 def _clip_value(value, max_value):
