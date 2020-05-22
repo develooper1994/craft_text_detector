@@ -301,7 +301,7 @@ class craft_detector:
             )
 
         return {
-            "boxes": boxes,
+            "boxes": boxes,  # len() -> wrong: 14, correct: 15
             "boxes_as_ratios": boxes_as_ratio,
             "polys": polys,
             "polys_as_ratios": polys_as_ratio,

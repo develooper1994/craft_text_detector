@@ -229,7 +229,6 @@ def export_extra_results(
     regions,
     heatmaps,
     output_dir="output/",
-    verticals=None,
     texts=None,
 ):
     """ save text detection result one by one
