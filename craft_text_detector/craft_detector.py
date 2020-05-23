@@ -452,8 +452,10 @@ class craft_detector:
 
 if __name__ == "__main__":
     # set image path and export folder directory
-    image_name = 'idcard.png'
-    image_path = '../figures/' + image_name
+    # image_name = 'idcard.png'
+    # image_path = '../figures/' + image_name
+    image_name = 'plate6.jpg'
+    image_path = r'C:/Users/selcu/PycharmProjects/ocr_toolkit/detection/craft_text_detector/figures/license_plate/' + image_name
     output_dir = 'outputs/'
 
 
