@@ -27,6 +27,7 @@ except:
         from detection.craft_text_detector.craft_text_detector import imgproc
         from detection.craft_text_detector.craft_text_detector import word_to_line
 
+
 def detect_text(image, output_dir=None, rectify=True, export_extra=True,
                 text_threshold=0.7, link_threshold=0.4,
                 low_text=0.4, long_size=1280,

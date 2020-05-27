@@ -1,4 +1,3 @@
-import torch
 import argparse
 import random
 import time

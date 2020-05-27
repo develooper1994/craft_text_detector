@@ -4,6 +4,7 @@ import time
 from test import test_net
 
 import cv2
+
 try:
     # direct call
     from craft_text_detector import file_utils

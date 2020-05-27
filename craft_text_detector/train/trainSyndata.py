@@ -1,14 +1,14 @@
+import argparse
 import random
 import time
 from collections import OrderedDict
-import argparse
+from test import test
 
 import torch
-import torch.utils.data as data
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
+import torch.utils.data as data
 from torch.autograd import Variable
-from test import test
 
 try:
     from data_loader import Synth80k

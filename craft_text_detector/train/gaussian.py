@@ -3,6 +3,7 @@ from math import exp
 
 import cv2
 import numpy as np
+
 try:
     # direct call
     from craft_text_detector import imgproc

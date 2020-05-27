@@ -169,37 +169,78 @@ def crop_poly(image, poly):
     return cropped
 
 
-def export_detected_region(image, poly, file_path, rectify=True):
+def export_poly(image, poly, rectify):
     """
-    Arguments:
-        image: full image
-        points: bbox or poly points
-        file_path: path to be exported
-        rectify: rectify detected polygon by affine transform
+    :param image: full image
+    :param points: bbox or poly points
+    :param file_path: path to be exported
+    :param rectify: rectify detected polygon by affine transform
+    :return: region result
     """
     if rectify:
         # rectify poly region
-        result = rectify_poly(image, poly)
+        detection_result = rectify_poly(image, poly)
     else:
-        result = crop_poly(image, poly)
+        detection_result = crop_poly(image, poly)
+    return detection_result
+
+
+def export_detected_region(image, poly, file_path, rectify=True, is_save=False):
+    """
+    :param image: full image
+    :param points: bbox or poly points
+    :param file_path: path to be exported
+    :param rectify: rectify detected polygon by affine transform
+    :param is_save: Saving if it is "True"
+    :return: region result
+    """
+    result = export_poly(image, poly, rectify)
 
     # export corpped region
-    cv2.imwrite(file_path, result)
+    if is_save:
+        cv2.imwrite(file_path, result)
+
+    return result
 
 
-def export_detected_regions(
-    image_path, image, regions, output_dir: str = "output/", rectify: bool = False
-):
+def export_detected_polygons(image, regions, rectify: bool = False):
     """
-    Arguments:
-        image_path: path to original image
-        image: full/original image
-        regions: list of bboxes or polys
-        output_dir: folder to be exported
-        rectify: rectify detected polygon by affine transform
+    Export regions.
+    :param image: full/original image
+    :param regions: list of bboxes or polys
+    :param rectify: rectify detected polygon by affine transform
+    :return: detected polygons
     """
     # deepcopy image so that original is not altered
     image = copy.deepcopy(image)
+
+    # init exported results
+    detection_results = []
+
+    for ind, region in enumerate(regions):
+        # export region
+        detection_result = export_poly(image, poly=region, rectify=rectify)
+        # note exported results
+        detection_results.append(detection_result)
+
+    return detection_results
+
+
+def export_detected_regions(image_path, image, regions, output_dir: str = "output/", rectify: bool = False):
+    """
+    Export and save regions as image files.
+    :param image_path: path to original image
+    :param image: full/original image
+    :param regions: list of bboxes or polys
+    :param output_dir: folder to be exported
+    :param rectify: rectify detected polygon by affine transform
+    :return: exported file(image) paths
+    """
+    # deepcopy image so that original is not altered
+    image = copy.deepcopy(image)
+
+    # init exported file paths
+    exported_file_paths = []
 
     # get file name
     file_name, file_ext = os.path.splitext(os.path.basename(image_path))
@@ -208,15 +249,12 @@ def export_detected_regions(
     crops_dir = os.path.join(output_dir, file_name + "_crops")
     create_dir(crops_dir)
 
-    # init exported file paths
-    exported_file_paths = []
-
     # export regions
     for ind, region in enumerate(regions):
         # get export path
         file_path = os.path.join(crops_dir, "crop_" + str(ind) + ".png")
         # export region
-        export_detected_region(image, poly=region, file_path=file_path, rectify=rectify)
+        export_detected_region(image, poly=region, file_path=file_path, rectify=rectify, is_save=True)
         # note exported file path
         exported_file_paths.append(file_path)
 

@@ -123,10 +123,10 @@ class craft_detector:
         :param image: input image or input image path
         :return: input image
         """
-        self.image = image
+        self.image = image  # consider image is numpy-array or some tensor
         if isinstance(image, str):
-            # consider image is image
-            self.image = read_image(image)
+            # consider image is path of image
+            self.image = read_image(image)  # numpy image
         return self.image
 
     def __set_device(self, cuda: bool = False, benchmark: bool = False):
@@ -454,8 +454,8 @@ if __name__ == "__main__":
     # set image path and export folder directory
     # image_name = 'idcard.png'
     # image_path = '../figures/' + image_name
-    image_name = 'plate6.jpg'
-    image_path = r'C:/Users/selcu/PycharmProjects/ocr_toolkit/detection/craft_text_detector/figures/license_plate_images/' + image_name
+    image_name = 'plate1.jpg'
+    image_path = r'C:/Users/selcu/PycharmProjects/ocr_toolkit/license_plate_images/' + image_name
     output_dir = 'outputs/'
 
 
@@ -504,5 +504,5 @@ if __name__ == "__main__":
 
 
     # Best time without refiner: 0.252/0.171
-    # Best time with refiner: 0.158/0.039. Wow!!!
+    # Best time with refiner: 0.138/0.039. Wow!!!
     test_oops(image_path, output_dir)
