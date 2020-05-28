@@ -4,18 +4,23 @@ try:
     # direct call
     print("direct call")
     from .craft_text_detector import craft_detector
-    from .craft_text_detector.craft_detector import craft_detector
+    import craft_detector
 except:
     # indirect call
     print("indirect call")
-    from detection.craft_text_detector import craft_text_detector
-    from detection.craft_text_detector.craft_text_detector import craft_detector
+    try:
+        from .craft_text_detector import craft_detector
+        from .craft_text_detector.craft_detector import craft_detector
+    except:
+        from detection.craft_text_detector import craft_text_detector
+        from detection.craft_text_detector.craft_text_detector import craft_detector
 
 # set image path and export folder directory
 image_name = 'idcard.png'
-image_path = '../figures/' + image_name
+image_path = '../figures/' + image_name  # linux
+# image_path = r'C:\Users\selcu\PycharmProjects\ocr_toolkit\detection\craft_text_detector\figures/' + image_name  # windows
 output_dir = None
-cuda = True  # False
+device = "gpu"  # False
 show_time = False
 craft_model_path = "../craft_mlt_25k.pth"
 refinenet_model_path = "../craft_refiner_CTW1500.pth"
@@ -26,7 +31,7 @@ image = craft_text_detector.imgproc.read_image(image_path)
 pred = craft_detector.craft_detector(image=image,
                                      craft_model_path=craft_model_path,
                                      refinenet_model_path=refinenet_model_path,
-                                     cuda=cuda)
+                                     device=device)
 
 
 class TestCraftTextDetector(unittest.TestCase):
@@ -65,7 +70,7 @@ class TestCraftTextDetector(unittest.TestCase):
 
         # TODO solve what is happining. why number changed.
         # self.assertEqual(15, len(prediction_result["boxes"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 15
-        self.assertEqual(14, len(prediction_result["boxes"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 14
+        self.assertEqual(15, len(prediction_result["boxes"]))  # refinenet_model_path=None -> 37, refinenet_model_path=refinenet_model_path -> 14
         self.assertEqual(4, len(prediction_result["boxes"][0]))
         self.assertEqual(2, len(prediction_result["boxes"][0][0]))
         self.assertEqual(111, int(prediction_result["boxes"][0][0][0]))
@@ -87,7 +92,7 @@ class TestCraftTextDetector(unittest.TestCase):
         pred = craft_detector.craft_detector(image=image,
                                              craft_model_path=craft_model_path,
                                              refinenet_model_path=None,
-                                             cuda=cuda)
+                                             device=device)
         prediction_result = pred.detect_text(image=image_path, output_dir=output_dir, rectify=True, export_extra=False,
                                              text_threshold=0.7, link_threshold=0.4, low_text=0.4, square_size=720,
                                              show_time=show_time, crop_type="poly")
@@ -110,7 +115,7 @@ class TestCraftTextDetector(unittest.TestCase):
         pred.reload(image=image,
                     craft_model_path=craft_model_path,
                     refinenet_model_path=refinenet_model_path,
-                    cuda=cuda)
+                    device=device)
         prediction_result = pred.detect_text(image=image_path, output_dir=output_dir, rectify=True, export_extra=False,
                                              text_threshold=0.7, link_threshold=0.4, low_text=0.4, square_size=720,
                                              show_time=show_time, crop_type="poly")
@@ -120,7 +125,7 @@ class TestCraftTextDetector(unittest.TestCase):
         pred.reload(image=image,
                     craft_model_path=craft_model_path,
                     refinenet_model_path=None,
-                    cuda=cuda)
+                    device=device)
         prediction_result = pred.detect_text(image=image_path, output_dir=output_dir, rectify=False, export_extra=False,
                                              text_threshold=0.7, link_threshold=0.4, low_text=0.4, square_size=720,
                                              show_time=show_time, crop_type="box")
@@ -142,7 +147,7 @@ class TestCraftTextDetector(unittest.TestCase):
         pred.reload(image=image,
                     craft_model_path=craft_model_path,
                     refinenet_model_path=refinenet_model_path,
-                    cuda=cuda)
+                    device=device)
         prediction_result = pred.detect_text(image=image_path, output_dir=output_dir, rectify=False, export_extra=False,
                                              text_threshold=0.7, link_threshold=0.4, low_text=0.4, square_size=720,
                                              show_time=show_time, crop_type="box")

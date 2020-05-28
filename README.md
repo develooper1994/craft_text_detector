@@ -55,7 +55,7 @@ image_path = 'figures/idcard.png'
 output_dir = 'outputs/'
 
 # apply craft text detection and export detected regions to output directory
-prediction_result = craft.detect_text(image_path,output_dir, cuda=False, crop_type="poly")
+prediction_result = craft.detect_text(image_path,output_dir, device="cpu", crop_type="poly")
 ```
 
 ### Advanced Usage
@@ -78,13 +78,13 @@ refinenet_model_path = "craft_refiner_CTW1500.pth"
 pred = craft.craft_detector.craft_detector(image=image,
                                            craft_model_path=craft_model_path,
                                            refinenet_model_path=refinenet_model_path,
-                                           cuda=True)
+                                           device="gpu")
 
 # perform prediction
 text_threshold = 0.9
 link_threshold = 0.2
 low_text = 0.2
-cuda = True  # False
+device="gpu"  # False
 show_time = False
 # perform prediction
 prediction_result = pred.get_prediction(image=image,
@@ -133,7 +133,7 @@ The result image and score maps will be saved to `./result` by default.
 * `--text_threshold`: text confidence threshold
 * `--low_text`: text low-bound score
 * `--link_threshold`: link confidence threshold
-* `--cuda`: use cuda for inference (default:True)
+* `--device`: use device for inference (default:"gpu")
 * `--canvas_size`: max image size for inference
 * `--mag_ratio`: image magnification ratio
 * `--poly`: enable polygon type result

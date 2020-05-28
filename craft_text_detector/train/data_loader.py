@@ -19,10 +19,16 @@ try:
     from craft_text_detector.train.watershed import watershed
 except:
     # indirect call
-    from ..file_utils import *
-    from ..train.gaussian import GaussianTransformer
-    from ..train.mep import mep
-    from ..train.watershed import watershed
+    try:
+        from craft_text_detector.craft_text_detector.file_utils import *
+        from craft_text_detector.craft_text_detector.train.gaussian import GaussianTransformer
+        from craft_text_detector.craft_text_detector.train.mep import mep
+        from craft_text_detector.craft_text_detector.train.watershed import watershed
+    except:
+        from detection.craft_text_detector.craft_text_detector.file_utils import *
+        from detection.craft_text_detector.craft_text_detector.train.gaussian import GaussianTransformer
+        from detection.craft_text_detector.craft_text_detector.train.mep import mep
+        from detection.craft_text_detector.craft_text_detector.train.watershed import watershed
 
 
 def ratio_area(h, w, box):
@@ -647,7 +653,7 @@ if __name__ == '__main__':
     net = CRAFT(freeze=True)
     net.load_state_dict(
         copyStateDict(torch.load('/data/CRAFT-pytorch/1-7.pth')))
-    net = net.cuda()
+    net = net.to(net.device)
     net = torch.nn.DataParallel(net)
     net.eval()
     dataloader = ICDAR2015(net, '/data/CRAFT-pytorch/icdar2015', target_size=768, viz=True)

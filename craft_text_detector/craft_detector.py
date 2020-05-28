@@ -3,7 +3,9 @@ import time
 import cv2
 import numpy as np
 import torch
-from torch.backends import cudnn
+
+# from recognition.handwritten_text_recognition.recognition.utils import device_selection_helper_pytorch
+from detection.craft_text_detector.craft_text_detector.craft_utils import device_selection_helper_pytorch
 
 try:
     # direct call
@@ -73,19 +75,19 @@ class craft_detector:
     def __init__(self, image=None,
                  craft_model_path=None,
                  refinenet_model_path=None,
-                 cuda: bool = False,
+                 device: str = "cpu",
                  benchmark: bool = False):
         """
         Configures class initializer.
         :param image: Input image
         :param craft_model_path: craft network(model) path with name
         :param refinenet_model_path: refiner network(model) path with name
-        :param cuda: cuda switch
+        :param device: device switch. "gpu", "cpu", "auto"
         :param benchmark: cudnn benchmark mode switch
         :return: None
         """
         self.reload(image=image, craft_model_path=craft_model_path, refinenet_model_path=refinenet_model_path,
-                    cuda=cuda, benchmark=benchmark)
+                    device=device, benchmark=benchmark)
 
     def __call__(self, *args, **kwargs):
         return self.get_prediction(**kwargs)
@@ -93,31 +95,31 @@ class craft_detector:
     def reload(self, image=None,
                craft_model_path=None,
                refinenet_model_path=None,
-               cuda: bool = False,
+               device: bool = "cpu",
                benchmark: bool = False):
         """
         Configures class initializer. Sometimes the class needs to be reloaded (configured) with new parameters
         :param image: Input image
         :param craft_model_path: craft network(model) path with name
         :param refinenet_model_path: refiner network(model) path with name
-        :param cuda: cuda switch
+        :param device: device switch. "gpu", "cpu", "auto"
         :param benchmark: cudnn benchmark mode switch
         :return: None
         """
         # load craft input image
-        self.__set_image(image)
+        self.set_image(image)
         # load craft net and refine net
         self.craft_net = CRAFT()  # initialize
         self.refine_net = RefineNet()  # initialize
         # Double check device
-        self.__set_device(cuda, benchmark)
+        self.__set_device(device, benchmark)
 
         # models my google drive
         self.__set_craft_net(craft_model_path)
 
         self.__set_refine_net(refinenet_model_path)
 
-    def __set_image(self, image):
+    def set_image(self, image):
         """
         Configure input image. if image is string then tries to access path.
         :param image: input image or input image path
@@ -129,26 +131,27 @@ class craft_detector:
             self.image = read_image(image)  # numpy image
         return self.image
 
-    def __set_device(self, cuda: bool = False, benchmark: bool = False):
+    def __set_device(self, device: str = "cpu", benchmark: bool = False):
         """
         Detects device(CPU/GPU) and configures device that network(model) running on.
-        :param cuda: cuda configuration swtich.
+        :param device: device switch. "gpu", "cpu", "auto"
             Default: False
         :param benchmark: cudnn benchmark mode switch.
             Default: False
         :return: None
         """
-        self.cuda = cuda
-        self.benchmark = benchmark
-        self.is_device = torch.cuda.is_available()
-        # self.device = torch.device('cuda' if self.is_device and self.cuda else 'cpu')
-        if self.cuda and self.is_device:
-            assert self.is_device, "!!!CUDA is not available!!!"  # Double check ;)
-            self.device = torch.device('cuda')
-            cudnn.enabled = True
-            cudnn.benchmark = self.benchmark
-        else:
-            self.device = torch.device('cpu')
+        # self.cuda = cuda
+        # self.benchmark = benchmark
+        # self.is_device = torch.cuda.is_available()
+        # # self.device = torch.device('cuda' if self.is_device and self.cuda else 'cpu')
+        # if self.cuda and self.is_device:
+        #     assert self.is_device, "!!!CUDA is not available!!!"  # Double check ;)
+        #     self.device = torch.device('cuda')
+        #     cudnn.enabled = True
+        #     cudnn.benchmark = self.benchmark
+        # else:
+        #     self.device = torch.device('cpu')
+        self.device = device_selection_helper_pytorch(device=device)
 
     def __set_craft_net(self, craft_model_path, model_switch=1):
         self.CRAFT_SYNDATA_GDRIVE_URL = "https://drive.google.com/open?id=1pzPBZ5cYDCHPVRYbWTgIjhntA_LLSLyS"
@@ -214,7 +217,7 @@ class craft_detector:
         # if image is None:
         #     image = self.image
         assert not image is None, "Image is None please enter image in numpy format or full path to load"
-        image = self.__set_image(image)
+        image = self.set_image(image)
 
         t0 = time.time()
 
@@ -353,11 +356,7 @@ class craft_detector:
         """
 
         # load image
-        if image is None:
-            image = self.image
-        elif isinstance(image, str):
-            # consider image is image_path
-            image = read_image(image)
+        image = self.set_image(image)
 
         # perform prediction
         prediction_result = self.get_prediction(image=image, text_threshold=text_threshold,
@@ -366,14 +365,15 @@ class craft_detector:
                                                 mag_ratio=mag_ratio, show_time=show_time)
 
         # arange regions
-        if crop_type == "box":
-            regions = prediction_result["boxes"]
-        elif crop_type == "poly":
-            regions = prediction_result["polys"]
-        else:
-            raise TypeError("crop_type can be only 'polys' or 'boxes'")
+        regions = self.arange_regions(crop_type, prediction_result)
 
         # export if output_dir is given
+        self.export_and_save_all(export_extra, image, output_dir, prediction_result, rectify, regions)
+
+        # return prediction results
+        return prediction_result
+
+    def export_and_save_all(self, export_extra, image, output_dir, prediction_result, rectify, regions):
         prediction_result["text_crop_paths"] = []
         if output_dir is not None:
             # export detected text regions
@@ -396,14 +396,20 @@ class craft_detector:
                     output_dir=output_dir,
                 )
 
-        # return prediction results
-        return prediction_result
+    def arange_regions(self, crop_type, prediction_result):
+        if crop_type == "box":
+            regions = prediction_result["boxes"]
+        elif crop_type == "poly":
+            regions = prediction_result["polys"]
+        else:
+            raise TypeError("crop_type can be only 'polys' or 'boxes'")
+        return regions
 
     def __load_state_dict(self, net, weight_path):
         """
         1) Loads weights and biases.
         2) Deserialize them.
-        3) Transport to cuda
+        3) Transport to device
         4) Make it pytorch "dataparallel"
         5) Turn it into evaluation mode.
         6) Return it.
@@ -469,7 +475,7 @@ if __name__ == "__main__":
         pred = craft_detector(image=image,
                               craft_model_path=craft_model_path,
                               refinenet_model_path=refinenet_model_path,
-                              cuda=True)
+                              device="gpu")
         prediction_result = pred.detect_text(image=image_path, output_dir=output_dir, rectify=True, export_extra=False,
                                              text_threshold=0.7, link_threshold=0.4, low_text=0.4, square_size=720,
                                              show_time=show_time, crop_type="poly")

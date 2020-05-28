@@ -31,7 +31,7 @@ except:
 def detect_text(image, output_dir=None, rectify=True, export_extra=True,
                 text_threshold=0.7, link_threshold=0.4,
                 low_text=0.4, long_size=1280,
-                cuda=False, show_time=False,
+                device="cpu", show_time=False,
                 crop_type="poly"):
     """
     Detects text but has some extra functionalities.
@@ -60,7 +60,7 @@ def detect_text(image, output_dir=None, rectify=True, export_extra=True,
         prediction_result
     """
     # load craft model
-    craft_net = craft_detector.craft_detector(image=image, cuda=cuda)
+    craft_net = craft_detector.craft_detector(image=image, device=device)
 
     prediction_result = craft_net.detect_text(image=image, output_dir=output_dir, rectify=rectify,
                                               export_extra=export_extra, text_threshold=text_threshold,
