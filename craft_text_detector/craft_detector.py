@@ -95,7 +95,7 @@ class craft_detector:
     def reload(self, image=None,
                craft_model_path=None,
                refinenet_model_path=None,
-               device: bool = "cpu",
+               device: str = "cpu",
                benchmark: bool = False):
         """
         Configures class initializer. Sometimes the class needs to be reloaded (configured) with new parameters
