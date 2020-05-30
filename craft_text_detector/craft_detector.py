@@ -1,4 +1,5 @@
 import time
+from pprint import pprint
 
 import cv2
 import numpy as np
@@ -41,7 +42,7 @@ except:
         from .craft_detector_util import copyStateDict, get_weight_path
         from .file_utils import (
             export_detected_regions,
-            export_extra_results
+            export_extra_results, export_detected_polygons
         )
         from .imgproc import read_image
         from .models.craftnet import CRAFT
@@ -75,6 +76,7 @@ class craft_detector:
     def __init__(self, image=None,
                  craft_model_path=None,
                  refinenet_model_path=None,
+                 crop_type="poly",
                  device: str = "cpu",
                  benchmark: bool = False):
         """
@@ -86,8 +88,10 @@ class craft_detector:
         :param benchmark: cudnn benchmark mode switch
         :return: None
         """
+        self.predicted_polygon_image = 0
+        self.detection_result = 0
         self.reload(image=image, craft_model_path=craft_model_path, refinenet_model_path=refinenet_model_path,
-                    device=device, benchmark=benchmark)
+                    crop_type=crop_type, device=device, benchmark=benchmark)
 
     def __call__(self, *args, **kwargs):
         return self.get_prediction(**kwargs)
@@ -95,6 +99,7 @@ class craft_detector:
     def reload(self, image=None,
                craft_model_path=None,
                refinenet_model_path=None,
+               crop_type="poly",
                device: str = "cpu",
                benchmark: bool = False):
         """
@@ -113,6 +118,9 @@ class craft_detector:
         self.refine_net = RefineNet()  # initialize
         # Double check device
         self.__set_device(device, benchmark)
+
+        # crop type
+        self.crop_type = crop_type
 
         # models my google drive
         self.__set_craft_net(craft_model_path)
@@ -272,16 +280,10 @@ class craft_detector:
         img_width = image.shape[1]
 
         # calculate box coords as ratios to image size
-        boxes_as_ratio = []
-        for box in boxes:
-            boxes_as_ratio.append(box / [img_width, img_height])
-        boxes_as_ratio = np.array(boxes_as_ratio)
+        boxes_as_ratio = self.as_ratio(boxes, img_width, img_height)
 
         # calculate poly coords as ratios to image size
-        polys_as_ratio = []
-        for poly in polys:
-            polys_as_ratio.append(poly / [img_width, img_height])
-        polys_as_ratio = np.array(polys_as_ratio)
+        polys_as_ratio = self.as_ratio(polys, img_width, img_height)
 
         text_score_heatmap = imgproc.cvt2HeatmapImg(score_text)
         link_score_heatmap = imgproc.cvt2HeatmapImg(score_link)
@@ -303,10 +305,13 @@ class craft_detector:
                 )
             )
 
-        return {
+        boxes = np.stack(boxes[:])  # multiple nested boxes arrays in to one array. TO BE ENSURE!
+        boxes_as_ratio = np.stack(boxes_as_ratio[:])  # multiple nested boxes arrays in to one array. TO BE ENSURE!
+
+        detection_result = {
             "boxes": boxes,  # len() -> wrong: 14, correct: 15
             "boxes_as_ratios": boxes_as_ratio,
-            "polys": polys,
+            "polys": polys,  # all dims have to be same so that cannot stack into one array.
             "polys_as_ratios": polys_as_ratio,
             "heatmaps": {
                 "text_score_heatmap": text_score_heatmap,
@@ -314,6 +319,105 @@ class craft_detector:
             },
             "times": times,
         }
+
+        self.detection_result = detection_result
+        return detection_result
+
+    def as_ratio(self, boxes=None, img_width=None, img_height=None, crop_type=None):
+        """
+        Gives bounding boxes as ratio.
+        :param boxes: bounding boxes. if don't set default will apply.
+        Note: Please set bounding box as boxes or poly.
+        Also you can get from self.detection_result[crop_type] or arange_regions method
+            Default; boxes = self.predicted_polygon_image
+        :param img_width: image width
+        :param img_height: image height
+        :param crop_type: select one. boxes, boxes_as_ratios, polys, polys_as_ratios
+            Default; poly
+        :return: box / [img_width, img_height]
+        """
+        if crop_type is None:
+            crop_type = self.crop_type
+        if boxes is None:
+            boxes = self.arange_regions(crop_type, self.detection_result)
+            try:
+                # I am just checking is self.detection_result in default value. I don't want it.
+                assert not boxes == 0, "Please set bounding box as boxes or poly. " \
+                                       "Also you can get from self.detection_result[crop_type] or arange_regions method"
+            except:
+                # fucking terrible idea but it works.
+                pass
+
+        if img_height is None:
+            img_height = self.image.shape[0]
+        if img_width is None:
+            img_width = self.image.shape[1]
+
+        # box.shape
+        # Out[6]: (4, 2)
+        # box / [img_width, img_height]
+        # Out[7]:
+        # array([[0.14765243, 0.03953583],
+        #        [0.84265315, 0.05366367],
+        #        [0.84215385, 0.11436041],
+        #        [0.14715309, 0.10023257]])
+
+        boxes_as_ratio = []
+        for box in boxes:
+            boxes_as_ratio.append(box / [img_width, img_height])
+        boxes_as_ratio = np.array(boxes_as_ratio)
+        return boxes_as_ratio
+
+    def near_far_coords(self, boxes=None, crop_type=None, is_ratio=False, last_index=-2):
+        """
+        # O.....................
+        # .(x1, y1)----(x2, y2).
+        # .   |------------|   .
+        # .   |------------|   .
+        # .(x3, y3)----(x4, y4).
+        # .....................f
+        Selects (near and far coordinates from O pixel) (x1, y1) and (x4, y4) coordinates.
+        Basicly it converts craft_text_detector "bounding box" system to
+        handwritten_text_recognition "bounding box" system
+        :param boxes: bounding boxes. if don't set default will apply.
+        Note: Please set bounding box as boxes or poly.
+        Also you can get from self.detection_result[crop_type] or arange_regions method
+            Default; boxes = self.predicted_polygon_image
+        :param crop_type: select one. boxes, boxes_as_ratios, polys, polys_as_ratios
+            Default; poly
+        :param is_ratio: box / [img_width, img_height]
+        :param last_index: (x4, y4) index
+        :return: near and far coordinates from O pixel
+        """
+        if crop_type is None:
+            crop_type = self.crop_type
+        if boxes is None:
+            boxes = self.arange_regions(crop_type, self.detection_result)
+            try:
+                # I am just checking is self.detection_result in default value. I don't want it.
+                assert not boxes == 0, "Please set bounding box as boxes or poly. " \
+                                       "Also you can get from self.detection_result[crop_type] or arange_regions method"
+            except:
+                # fucking terrible idea but it works.
+                pass
+        if is_ratio:
+            boxes = self.as_ratio(boxes=boxes, crop_type=crop_type)
+        near_far_coords = []
+        # boxes = np.stack(boxes)
+        # if not isinstance(boxes, list):  # crop_type == "box":
+        for idx, box in enumerate(boxes):
+            # box = np.stack(box)
+            try:
+                # TODO! use min and max later for polygons.
+                x1y1 = box[0]  # (x1, y1)
+                x4y4 = box[last_index]  # (x4, y4)
+            except:
+                x1y1 = box[0, 0]  # (x1, y1)
+                x4y4 = box[0, last_index]  # (x4, y4)
+            near_far_coords.append([x1y1[0], x1y1[1], x4y4[0], x4y4[1]])  # all values in one line
+
+        near_far_coords = np.array(near_far_coords)
+        return near_far_coords
 
     # detect texts
     def detect_text(self, image=None,
@@ -326,7 +430,7 @@ class craft_detector:
                     square_size=1280,
                     mag_ratio=1,
                     show_time=False,
-                    crop_type="poly"):
+                    crop_type=None):
         """
         Detects text but has some extra functionalities.
         :param image: path to the image to be processed
@@ -355,6 +459,9 @@ class craft_detector:
             prediction_result
         """
 
+        if crop_type is None:
+            crop_type = self.crop_type
+
         # load image
         image = self.set_image(image)
 
@@ -372,6 +479,62 @@ class craft_detector:
 
         # return prediction results
         return prediction_result
+
+    def get_detected_polygons(self, rectify: bool = True, crop_type: str = "poly"):
+        """
+        Get detection region image array as numpy array
+        :param rectify: do you want to rectify?
+        Note: Use as_ratio method after the get_detected_polygons method.
+        Gives wrong answer because ration numbers are so small
+            Default; True
+        :param crop_type: select one. boxes, boxes_as_ratios, polys, polys_as_ratios
+            Default; poly
+        :return:
+        """
+
+        # arange regions
+        regions = self.arange_regions(crop_type, self.detection_result)
+
+        # export detected text regions
+        # TODO! !!! Problem !!!
+        # nested array
+        # 'polys': array([array([[5.504257, 146.648],
+        #                        [485.75977, 143.48842],
+        #                        [486.35083, 233.32661],
+        #                        [6.095291, 236.48619]], dtype=float32),
+        #                 array([[144., 238.],
+        #                        [352., 238.],
+        #                        [352., 260.],
+        #                        [144., 260.]], dtype=float32),
+        #                 array([[430., 240.],
+        #                        [510., 240.],
+        #                        [510., 260.],
+        #                        [430., 260.]], dtype=float32)], dtype=object),
+        # not nested array.
+        # 'polys_as_ratios': array([[[0.0107505, 0.42140228],
+        #                            [0.94874954, 0.41232304],
+        #                            [0.94990396, 0.67047878],
+        #                            [0.01190487, 0.67955802]],
+        #
+        #                           [[0.28125, 0.68390805],
+        #                            [0.6875, 0.68390805],
+        #                            [0.6875, 0.74712644],
+        #                            [0.28125, 0.74712644]],
+        #
+        #                           [[0.83984375, 0.68965517],
+        #                            [0.99609375, 0.68965517],
+        #                            [0.99609375, 0.74712644],
+        #                            [0.83984375, 0.74712644]]]),
+        if crop_type == 'boxes_as_ratios' or crop_type == 'polys_as_ratios':
+            # rectify = False
+            assert False, "use as_ratio method after the get_detected_polygons method. " \
+                          "Gives wrong answer because ration numbers are so small"
+        self.predicted_polygon_image = export_detected_polygons(
+            image=self.image,  # image should come from same class
+            regions=regions,
+            rectify=rectify
+        )
+        return self.predicted_polygon_image
 
     def export_and_save_all(self, export_extra, image, output_dir, prediction_result, rectify, regions):
         prediction_result["text_crop_paths"] = []
@@ -396,11 +559,20 @@ class craft_detector:
                     output_dir=output_dir,
                 )
 
-    def arange_regions(self, crop_type, prediction_result):
+    def arange_regions(self, crop_type=None, prediction_result=None):
+        # "boxes": boxes,  # len() -> wrong: 14, correct: 15
+        # "boxes_as_ratios": boxes_as_ratio,
+        # "polys": polys,
+        # "polys_as_ratios": polys_as_ratio,
+        if crop_type is None:
+            crop_type = self.crop_type
+        if prediction_result is None:
+            prediction_result = self.detection_result
+
         if crop_type == "box":
-            regions = prediction_result["boxes"]
+            regions = prediction_result["boxes"]  # boxes
         elif crop_type == "poly":
-            regions = prediction_result["polys"]
+            regions = prediction_result["polys"]  # polys
         else:
             raise TypeError("crop_type can be only 'polys' or 'boxes'")
         return regions
@@ -458,10 +630,12 @@ class craft_detector:
 
 if __name__ == "__main__":
     # set image path and export folder directory
+    image_name = "a1.png"
+    image_path = r"C:\Users\selcu\PycharmProjects\ocr_toolkit\detection\craft_text_detector\figures\IAM8" + "/" + image_name
     # image_name = 'idcard.png'
     # image_path = '../figures/' + image_name
-    image_name = 'plate1.jpg'
-    image_path = r'C:/Users/selcu/PycharmProjects/ocr_toolkit/license_plate_images/' + image_name
+    # image_name = 'plate1.jpg'
+    # image_path = r'C:/Users/selcu/PycharmProjects/ocr_toolkit/license_plate_images/' + image_name
     output_dir = 'outputs/'
 
 
@@ -507,6 +681,10 @@ if __name__ == "__main__":
             heatmaps=prediction_result["heatmaps"],
             output_dir=output_dir
         )
+
+        crop_type = "box"  # poly
+        print(pred.near_far_coords(crop_type=crop_type))
+        # pprint(prediction_result)
 
 
     # Best time without refiner: 0.252/0.171
