@@ -169,12 +169,14 @@ def crop_poly(image, poly):
     return cropped
 
 
-def export_poly(image, poly, rectify):
+def export_poly(image, poly, rectify, gray_scale=False):
     """
     :param image: full image
     :param points: bbox or poly points
     :param file_path: path to be exported
     :param rectify: rectify detected polygon by affine transform
+    :param gray_scale: If you want in grayscale set it True
+        Default; False
     :return: region result
     """
     if rectify:
@@ -182,19 +184,24 @@ def export_poly(image, poly, rectify):
         detection_result = rectify_poly(image, poly)
     else:
         detection_result = crop_poly(image, poly)
+
+    if gray_scale:
+        detection_result = cv2.cvtColor(detection_result, cv2.COLOR_BGR2GRAY)
     return detection_result
 
 
-def export_detected_region(image, poly, file_path, rectify=True, is_save=False):
+def export_detected_region(image, poly, file_path, rectify=True, is_save=False, gray_scale=False):
     """
     :param image: full image
     :param points: bbox or poly points
     :param file_path: path to be exported
     :param rectify: rectify detected polygon by affine transform
     :param is_save: Saving if it is "True"
+    :param gray_scale: If you want in grayscale set it True
+        Default; False
     :return: region result
     """
-    result = export_poly(image, poly, rectify)
+    result = export_poly(image, poly, rectify, gray_scale=gray_scale)
 
     # export corpped region
     if is_save:
@@ -203,12 +210,14 @@ def export_detected_region(image, poly, file_path, rectify=True, is_save=False):
     return result
 
 
-def export_detected_polygons(image, regions, rectify: bool = False):
+def export_detected_polygons(image, regions, rectify: bool = False, gray_scale=False):
     """
     Export regions.
     :param image: full/original image
     :param regions: list of bboxes or polys
     :param rectify: rectify detected polygon by affine transform
+    :param gray_scale: If you want in grayscale set it True
+        Default; False
     :return: detected polygons
     """
     # deepcopy image so that original is not altered
@@ -219,7 +228,7 @@ def export_detected_polygons(image, regions, rectify: bool = False):
 
     for ind, region in enumerate(regions):
         # export region
-        detection_result = export_poly(image, poly=region, rectify=rectify)
+        detection_result = export_poly(image, poly=region, rectify=rectify, gray_scale=gray_scale)
         # note exported results
         detection_results.append(detection_result)
 

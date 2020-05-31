@@ -421,7 +421,7 @@ class craft_detector:
 
     # detect texts
     def detect_text(self, image=None,
-                    output_dir=None,
+                    output_dir='outputs/',
                     rectify=True,
                     export_extra=True,
                     text_threshold=0.7,
@@ -463,6 +463,9 @@ class craft_detector:
             crop_type = self.crop_type
 
         # load image
+        image_path="output.jpg"
+        if isinstance(image, str):
+            image_path = image
         image = self.set_image(image)
 
         # perform prediction
@@ -475,12 +478,13 @@ class craft_detector:
         regions = self.arange_regions(crop_type, prediction_result)
 
         # export if output_dir is given
-        self.export_and_save_all(export_extra, image, output_dir, prediction_result, rectify, regions)
+        self.export_and_save_all(export_extra=export_extra, image_path=image_path, image=self.image, output_dir=output_dir,
+                                 prediction_result=prediction_result, rectify=rectify, regions=regions)
 
         # return prediction results
         return prediction_result
 
-    def get_detected_polygons(self, rectify: bool = True, crop_type: str = "poly"):
+    def get_detected_polygons(self, rectify: bool = True, crop_type: str = "poly", gray_scale=False):
         """
         Get detection region image array as numpy array
         :param rectify: do you want to rectify?
@@ -489,6 +493,8 @@ class craft_detector:
             Default; True
         :param crop_type: select one. boxes, boxes_as_ratios, polys, polys_as_ratios
             Default; poly
+        :param gray_scale: If you want in grayscale set it True
+            Default; False
         :return:
         """
 
@@ -532,11 +538,12 @@ class craft_detector:
         self.predicted_polygon_image = export_detected_polygons(
             image=self.image,  # image should come from same class
             regions=regions,
-            rectify=rectify
+            rectify=rectify,
+            gray_scale=gray_scale
         )
         return self.predicted_polygon_image
 
-    def export_and_save_all(self, export_extra, image, output_dir, prediction_result, rectify, regions):
+    def export_and_save_all(self, export_extra=True, image_path="output.jpg", image=None, output_dir='outputs/', prediction_result=None, rectify=True, regions=None):
         prediction_result["text_crop_paths"] = []
         if output_dir is not None:
             # export detected text regions
