@@ -637,13 +637,15 @@ class craft_detector:
 
 if __name__ == "__main__":
     # set image path and export folder directory
-    image_name = "a1.png"
+    image_name = "a8.png"
     image_path = r"C:\Users\selcu\PycharmProjects\ocr_toolkit\detection\craft_text_detector\figures\IAM8" + "/" + image_name
+    # image_name = "htr_level_5.jpg"
+    # image_path = r"C:\Users\selcu\PycharmProjects\ocr_toolkit\detection\craft_text_detector\figures\test_images2" + "/" + image_name
     # image_name = 'idcard.png'
     # image_path = '../figures/' + image_name
     # image_name = 'plate1.jpg'
     # image_path = r'C:/Users/selcu/PycharmProjects/ocr_toolkit/license_plate_images/' + image_name
-    output_dir = 'outputs/'
+    output_dir = image_name + '/'
 
 
     def test_oops(image_path, output_dir):
