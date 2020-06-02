@@ -112,7 +112,7 @@ class craft_detector:
         :return: None
         """
         # load craft input image
-        self.set_image(image)
+        self.image = self.set_image(image)
         # load craft net and refine net
         self.craft_net = CRAFT()  # initialize
         self.refine_net = RefineNet()  # initialize
@@ -222,8 +222,8 @@ class craft_detector:
         }
         """
 
-        # if image is None:
-        #     image = self.image
+        if image is None:
+            image = self.image
         assert not image is None, "Image is None please enter image in numpy format or full path to load"
         image = self.set_image(image)
 
